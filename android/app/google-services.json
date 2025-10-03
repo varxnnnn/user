@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1058031343797",
+    "project_id": "giftardo-43381",
+    "storage_bucket": "giftardo-43381.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1058031343797:android:c3165d560c6287730706fc",
+        "android_client_info": {
+          "package_name": "com.example.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4DsEeyyaVMwVaSGcc5LvVj7J63u0v_us"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1058031343797:android:fb4c3a2bc1c22e320706fc",
+        "android_client_info": {
+          "package_name": "com.example.giftardo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4DsEeyyaVMwVaSGcc5LvVj7J63u0v_us"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
