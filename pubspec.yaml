@@ -40,6 +40,7 @@ dependencies:
   cloud_firestore:
   flutter_svg:
   google_sign_in:
+  shimmer:
 
 dev_dependencies:
   flutter_test:

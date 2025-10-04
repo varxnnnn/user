@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:giftardo/pages/explore_page.dart';
 import 'package:giftardo/providers/wallet_provider.dart';
 import 'package:giftardo/providers/milestone_provider.dart'; // ✅ Added import
+import '../components/loading_components.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -393,7 +394,10 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 10),
                         if (milestoneProvider.isLoading)
-                          const Center(child: CircularProgressIndicator())
+                          LoadingComponents.homeScreenLoading(
+                            MediaQuery.of(context).size.width,
+                            MediaQuery.of(context).size.height,
+                          )
                         else
                           Column(
                             children: milestoneProvider.tasks.map((task) {

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/quiz_provider.dart';
 import '../../../pages/explore_tabs/quiz/quiz_detail_page.dart'; // keep your existing page
+import '../components/loading_components.dart';
 
 class QuizzesScreen extends StatelessWidget {
   const QuizzesScreen({super.key});
@@ -25,7 +26,10 @@ class QuizzesScreen extends StatelessWidget {
       body: Consumer<QuizProvider>(
         builder: (context, quizProvider, child) {
           if (quizProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return LoadingComponents.listScreenLoading(
+              MediaQuery.of(context).size.width,
+              MediaQuery.of(context).size.height,
+            );
           }
 
           if (quizProvider.error != null) {
@@ -91,12 +95,9 @@ class QuizzesScreen extends StatelessWidget {
                                   description: quiz['rewardDescription'] ?? '',
                                   sponsorName: quiz['sponsorName'] ?? '',
                                   sponsorLogo: '', // as in your original
-                                  durationSeconds: quiz['durationSeconds'] ?? 0,
                                   pointsAwarded: quiz['rewardedItem'] ?? 0,
                                   rewardType: quiz['rewardType'] ?? 'Points',
-                                  questions: (quiz['questions'] as List<dynamic>)
-                                      .map((q) => Map<String, dynamic>.from(q))
-                                      .toList(),
+                                  questions: [], // Empty list since we fetch from Firestore
                                   rewardedItem: quiz['rewardedItem'] ?? 0,
                                 ),
                               ),
