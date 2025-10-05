@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:giftardo/providers/profile_provider.dart';
+import 'package:giftardo/providers/rewards_display_provider.dart';
 import '../components/loading_components.dart';
+import '../components/rewards_display_widget.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -202,6 +204,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
+                SizedBox(height: screenHeight * 0.03),
+
+                // Rewards Display Section
+                const RewardsDisplayWidget(),
                 SizedBox(height: screenHeight * 0.03),
 
                 // Settings & Preferences

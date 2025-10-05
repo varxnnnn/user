@@ -1,14 +1,18 @@
 // lib/providers/auth_provider.dart
 
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:giftardo/core/services/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   bool _isLoading = false;
   String? _error;
   String? _pendingVerificationId; // For OTP-first signup
+  User? _user;
+  bool _isInitialized = false;
 
   // Stash signup data until OTP is verified
   String? _pendingEmail;
@@ -22,6 +26,21 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get pendingVerificationId => _pendingVerificationId;
+  User? get user => _user;
+  bool get isAuthenticated => _user != null;
+  bool get isInitialized => _isInitialized;
+
+  AuthProvider() {
+    _init();
+  }
+
+  void _init() {
+    _auth.authStateChanges().listen((User? user) {
+      _user = user;
+      _isInitialized = true;
+      notifyListeners();
+    });
+  }
 
   // 🔥 OTP-first: request OTP and stash signup data
   Future<bool> requestOtpAndPrepareSignup({

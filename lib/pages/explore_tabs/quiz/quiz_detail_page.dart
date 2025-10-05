@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:giftardo/core/services/reward_allocation_service.dart';
+import 'quiz_result_page.dart';
 
 class QuizDetailPage extends StatefulWidget {
   final String activityId;
@@ -34,8 +36,6 @@ class QuizDetailPage extends StatefulWidget {
 class _QuizDetailPageState extends State<QuizDetailPage> {
   late List<String?> _answers;
   bool _submitted = false;
-  int _score = 0;
-  bool _rewarded = false;
   List<Map<String, dynamic>> _questions = [];
   bool _loadingQuestions = true;
   int _rewardPoints = 0;
@@ -114,9 +114,42 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
 
     setState(() {
       _submitted = true;
-      _score = score;
-      _rewarded = allCorrect; // reward only if all answers are correct
     });
+
+    int finalRewardPoints = _rewardPoints;
+    String? rewardCode;
+
+    // Use new reward allocation service if user passed the quiz
+    if (allCorrect) {
+      final rewardService = RewardAllocationService();
+
+      // Get activity details to find sponsor_id and reward_id
+      final activityDoc = await FirebaseFirestore.instance
+          .collection('sponsor_activities')
+          .doc(widget.activityId)
+          .get();
+
+      if (activityDoc.exists) {
+        final activityData = activityDoc.data()!;
+        final sponsorId = activityData['sponsor_id'] as String?;
+        final rewardAllocation = activityData['reward_allocation'] as Map<String, dynamic>?;
+        final rewardId = rewardAllocation?['reward_id'] as String?;
+
+        if (sponsorId != null && rewardId != null) {
+          final rewardResult = await rewardService.allocateRewardToUser(
+            activityId: widget.activityId,
+            userId: widget.userId,
+            sponsorId: sponsorId,
+            rewardId: rewardId,
+          );
+
+          if (rewardResult != null) {
+            finalRewardPoints = rewardResult['reward_value'] as int? ?? 0;
+            rewardCode = rewardResult['reward_code'] as String?;
+          }
+        }
+      }
+    }
 
     final attemptData = {
       'activityId': widget.activityId,
@@ -124,12 +157,13 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       'description': widget.description,
       'sponsorName': widget.sponsorName,
       'rewardType': widget.rewardType,
-      'rewardedItem': _rewarded ? _rewardPoints : 0,
+      'rewardedItem': finalRewardPoints, // Use actual reward value
+      'rewardCode': rewardCode, // Include reward code if available
       'score': score,
       'totalQuestions': _questions.length,
       'answers': _answers,
       'timestamp': FieldValue.serverTimestamp(),
-      'rewarded': _rewarded,
+      'rewarded': allCorrect,
       'userId': widget.userId,
     };
 
@@ -139,25 +173,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       // Save to user's quiz_attempts
       await userDoc.collection('quiz_attempts').doc(widget.activityId).set(attemptData);
 
-      // Save under sponsor activities sub collection
-      await FirebaseFirestore.instance
-          .collection('sponsor_activities')
-          .doc('sub')
-          .collection('quiz')
-          .doc(widget.activityId)
-          .collection('users')
-          .doc(widget.userId)
-          .set(attemptData);
-
-      // Save under sponsor activities all collection
-      await FirebaseFirestore.instance
-          .collection('sponsor_activities')
-          .doc('all')
-          .collection('all_act')
-          .doc(widget.activityId)
-          .collection('users')
-          .doc(widget.userId)
-          .set(attemptData);
 
       // Increment activitiesCompleted only once
       await FirebaseFirestore.instance
@@ -167,32 +182,39 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
         'activitiesCompleted': FieldValue.increment(1),
       });
 
-      // Add reward points to user's points if activity is completed successfully
-      if (_rewarded && _rewardPoints > 0) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(widget.userId)
-            .update({
-          'points': FieldValue.increment(_rewardPoints),
-        });
+      // Navigate to QuizResultPage
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => QuizResultPage(
+              activityId: widget.activityId,
+              title: widget.title,
+              description: widget.description,
+              sponsorName: widget.sponsorName,
+              sponsorLogo: widget.sponsorLogo,
+              rewardType: widget.rewardType,
+              rewardedItem: widget.rewardedItem,
+              questions: _questions,
+              answers: _answers,
+              score: score,
+              rewarded: allCorrect,
+              rewardPoints: finalRewardPoints,
+              userId: widget.userId,
+            ),
+          ),
+        );
       }
-
-      // Add reward to rewards_earned collection
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.userId)
-          .collection('rewards_earned')
-          .doc(widget.activityId)
-          .set({
-        'activityId': widget.activityId,
-        'activityTitle': widget.title,
-        'rewardType': widget.rewardType,
-        'rewardedItem': _rewarded ? _rewardPoints : 0,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
 
     } catch (e) {
       debugPrint("Error saving quiz attempt: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error submitting quiz: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -214,16 +236,35 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
             Expanded(
               child: _loadingQuestions
                   ? const Center(child: CircularProgressIndicator())
-                  : _submitted
-                      ? _buildAnalysis()
-                      : _buildQuestions(),
+                  : _buildQuestions(),
             ),
             if (!_submitted && !_loadingQuestions && _questions.isNotEmpty)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _submitQuiz,
-                  child: const Text("Submit"),
+                  onPressed: _submitted ? null : _submitQuiz,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: _submitted 
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text("Submitting..."),
+                        ],
+                      )
+                    : const Text("Submit Quiz"),
                 ),
               ),
           ],
@@ -308,43 +349,4 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     );
   }
 
-  Widget _buildAnalysis() {
-    return ListView.builder(
-      itemCount: _questions.length + 1,
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          // Show overall score at top
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Quiz Completed!", style: Theme.of(context).textTheme.headlineMedium),
-              const SizedBox(height: 12),
-              Text("Score: $_score / ${_questions.length}"),
-              Text("Reward: ${_rewarded ? '$_rewardPoints points' : 'Not rewarded'}"),
-              const SizedBox(height: 16),
-            ],
-          );
-        }
-        final q = _questions[index - 1];
-        final userAnswer = _answers[index - 1];
-        final correctAnswer = q['correct_answer'];
-        final isCorrect = userAnswer == correctAnswer;
-
-        return Card(
-          color: isCorrect ? Colors.green[100] : Colors.red[100],
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            title: Text(q['question_text']),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Your Answer: ${userAnswer ?? 'Not answered'}"),
-                Text("Correct Answer: $correctAnswer"),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 }

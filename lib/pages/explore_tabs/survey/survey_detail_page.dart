@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:giftardo/core/services/reward_allocation_service.dart';
 
 class SurveyDetailPage extends StatefulWidget {
   final String userId;
@@ -33,6 +34,7 @@ class SurveyDetailPage extends StatefulWidget {
 class _SurveyDetailPageState extends State<SurveyDetailPage> {
   late List<String?> _answers;
   bool _submitted = false;
+  int _actualRewardValue = 0;
 
   @override
   void initState() {
@@ -72,7 +74,7 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
       'description': widget.description,
       'sponsorName': widget.sponsorName,
       'rewardType': widget.rewardType,
-      'rewardedItem': widget.rewardedItem,
+      'rewardedItem': 0, // Will be updated after reward allocation
       'answers': _answers,
       'timestamp': FieldValue.serverTimestamp(),
       'userId': widget.userId,
@@ -116,19 +118,60 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
         'activitiesCompleted': FieldValue.increment(1),
       });
 
-      // Add reward to rewards_earned collection
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.userId)
-          .collection('rewards_earned')
+      // Use new reward allocation service to guarantee a reward
+      final rewardService = RewardAllocationService();
+      
+      // Get activity details to find sponsor_id and reward_id
+      final activityDoc = await FirebaseFirestore.instance
+          .collection('sponsor_activities')
           .doc(widget.activityId)
-          .set({
-        'activityId': widget.activityId,
-        'activityTitle': widget.title,
-        'rewardType': widget.rewardType,
-        'rewardedItem': widget.rewardedItem,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+          .get();
+          
+      if (activityDoc.exists) {
+        final activityData = activityDoc.data()!;
+        final sponsorId = activityData['sponsor_id'] as String?;
+        final rewardAllocation = activityData['reward_allocation'] as Map<String, dynamic>?;
+        final rewardId = rewardAllocation?['reward_id'] as String?;
+        
+        if (sponsorId != null && rewardId != null) {
+          final rewardResult = await rewardService.allocateRewardToUser(
+            activityId: widget.activityId,
+            userId: widget.userId,
+            sponsorId: sponsorId,
+            rewardId: rewardId,
+          );
+          
+          if (rewardResult != null) {
+            _actualRewardValue = rewardResult['reward_value'] as int? ?? 0;
+            
+            // Update all records with actual reward value
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(widget.userId)
+                .collection('survey_attempts')
+                .doc(widget.activityId)
+                .update({'rewardedItem': _actualRewardValue});
+                
+            await FirebaseFirestore.instance
+                .collection('sponsor_activities')
+                .doc('sub')
+                .collection('survey')
+                .doc(widget.activityId)
+                .collection('users')
+                .doc(widget.userId)
+                .update({'rewardedItem': _actualRewardValue});
+                
+            await FirebaseFirestore.instance
+                .collection('sponsor_activities')
+                .doc('all')
+                .collection('all_act')
+                .doc(widget.activityId)
+                .collection('users')
+                .doc(widget.userId)
+                .update({'rewardedItem': _actualRewardValue});
+          }
+        }
+      }
 
       setState(() {
         _submitted = true;
@@ -148,7 +191,7 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
       MaterialPageRoute(
         builder: (_) => SurveyAnalysisPage(
           title: widget.title,
-          rewardedItem: widget.rewardedItem,
+          rewardedItem: _actualRewardValue > 0 ? _actualRewardValue : widget.rewardedItem,
           rewardType: widget.rewardType,
         ),
       ),
