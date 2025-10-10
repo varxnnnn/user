@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../components/loading_components.dart';
 
 class LeaderboardPage extends StatefulWidget {
   const LeaderboardPage({super.key});
@@ -132,7 +133,10 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? LoadingComponents.leaderboardScreenLoading(
+              MediaQuery.of(context).size.width,
+              MediaQuery.of(context).size.height,
+            )
           : SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),

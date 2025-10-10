@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
-import 'ui/screens/login_screen.dart';
+import 'ui/screens/auth_wrapper.dart';
 import 'providers/wallet_provider.dart';
 import 'providers/leaderboard_provider.dart';
 import 'providers/auth_provider.dart';
@@ -14,6 +14,7 @@ import 'providers/poll_provider.dart';
 import 'providers/quiz_provider.dart';
 import 'providers/survey_provider.dart';
 import 'providers/all_activities_provider.dart';
+import 'providers/rewards_display_provider.dart';
 
 
 void main() async {
@@ -34,7 +35,8 @@ runApp(
         ChangeNotifierProvider(create: (context) => PollProvider()),
         ChangeNotifierProvider(create: (_) => QuizProvider()),
         ChangeNotifierProvider(create: (_) => SurveyProvider()),
-        ChangeNotifierProvider(create: (_) => AllActivitiesProvider())
+        ChangeNotifierProvider(create: (_) => AllActivitiesProvider()),
+        ChangeNotifierProvider(create: (_) => RewardsDisplayProvider())
       ],
       child: const MyApp(),
     ),
@@ -57,11 +59,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      initialRoute: '/login',
-      routes: {
-        '/login': (context) => const LoginScreen(),
-        // Add other routes here later (e.g., '/main')
-      },
+      home: const AuthWrapper(),
     );
   }
 }

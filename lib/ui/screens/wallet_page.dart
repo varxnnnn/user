@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:giftardo/providers/wallet_provider.dart';
 import 'package:giftardo/providers/reward_provider.dart'; // 👈 NEW
+import '../components/loading_components.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({Key? key}) : super(key: key);
@@ -167,7 +168,12 @@ class _WalletScreenState extends State<WalletScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: rewardProvider.isLoading
-                      ? const Center(child: CircularProgressIndicator())
+                      ? LoadingComponents.gridLoading(
+                          screenWidth: screenWidth,
+                          screenHeight: screenHeight,
+                          crossAxisCount: 2,
+                          itemCount: 4,
+                        )
                       : GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),

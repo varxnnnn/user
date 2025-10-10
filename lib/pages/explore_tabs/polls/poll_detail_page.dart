@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:giftardo/core/services/reward_allocation_service.dart';
 
 class PollDetailPage extends StatefulWidget {
   final String userId;
@@ -32,6 +33,7 @@ class PollDetailPage extends StatefulWidget {
 class _PollDetailPageState extends State<PollDetailPage> {
   final Map<int, String> _answers = {};
   bool _isSubmitting = false;
+  int _actualRewardValue = 0;
 
   Future<void> _submitPoll() async {
     if (_answers.length < widget.questions.length) {
@@ -54,21 +56,11 @@ class _PollDetailPageState extends State<PollDetailPage> {
         'description': widget.description,
         'sponsorName': widget.sponsorName,
         'rewardType': widget.rewardType,
-        'rewardedItem': widget.pointsAwarded,
+        'rewardedItem': 0, // Will be updated after reward allocation
         'answers': _answers.map((k, v) => MapEntry(k.toString(), v)),
         'timestamp': FieldValue.serverTimestamp(),
         'userId': widget.userId,
         'rewarded': true,
-      });
-
-      // 2️⃣ Earned rewards
-      final earnedRewardsRef = userRef.collection('rewards_earned').doc(widget.activityId);
-      await earnedRewardsRef.set({
-        'activityId': widget.activityId,
-        'activityTitle': widget.title,
-        'rewardType': widget.rewardType,
-        'rewardedItem': widget.pointsAwarded,
-        'timestamp': FieldValue.serverTimestamp(),
       });
 
       // 3️⃣ Sponsor activity (sub)
@@ -86,7 +78,7 @@ class _PollDetailPageState extends State<PollDetailPage> {
         'description': widget.description,
         'sponsorName': widget.sponsorName,
         'rewardType': widget.rewardType,
-        'rewardedItem': widget.pointsAwarded,
+        'rewardedItem': 0, // Will be updated after reward allocation
         'answers': _answers.map((k, v) => MapEntry(k.toString(), v)),
         'timestamp': FieldValue.serverTimestamp(),
         'userId': widget.userId,
@@ -108,7 +100,7 @@ class _PollDetailPageState extends State<PollDetailPage> {
         'description': widget.description,
         'sponsorName': widget.sponsorName,
         'rewardType': widget.rewardType,
-        'rewardedItem': widget.pointsAwarded,
+        'rewardedItem': 0, // Will be updated after reward allocation
         'answers': _answers.map((k, v) => MapEntry(k.toString(), v)),
         'timestamp': FieldValue.serverTimestamp(),
         'userId': widget.userId,
@@ -118,13 +110,50 @@ class _PollDetailPageState extends State<PollDetailPage> {
       // Increment activities completed
       await userRef.update({'activitiesCompleted': FieldValue.increment(1)});
 
+      // Use new reward allocation service
+      final rewardService = RewardAllocationService();
+      
+      // Get activity details to find sponsor_id and reward_id
+      final activityDoc = await FirebaseFirestore.instance
+          .collection('sponsor_activities')
+          .doc(widget.activityId)
+          .get();
+          
+      if (activityDoc.exists) {
+        final activityData = activityDoc.data()!;
+        final sponsorId = activityData['sponsor_id'] as String?;
+        final rewardAllocation = activityData['reward_allocation'] as Map<String, dynamic>?;
+        final rewardId = rewardAllocation?['reward_id'] as String?;
+        
+        if (sponsorId != null && rewardId != null) {
+          final rewardResult = await rewardService.allocateRewardToUser(
+            activityId: widget.activityId,
+            userId: widget.userId,
+            sponsorId: sponsorId,
+            rewardId: rewardId,
+          );
+          
+          if (rewardResult != null) {
+            final actualRewardValue = rewardResult['reward_value'] as int? ?? 0;
+            
+            // Update all records with actual reward value
+            await pollAttemptRef.update({'rewardedItem': actualRewardValue});
+            await sponsorPollRef.update({'rewardedItem': actualRewardValue});
+            await sponsorAllRef.update({'rewardedItem': actualRewardValue});
+            
+            // Update the actual reward value for display
+            _actualRewardValue = actualRewardValue;
+          }
+        }
+      }
+
       // Navigate to analysis page
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => PollAnalysisPage(
             title: widget.title,
-            rewardedItem: widget.pointsAwarded,
+            rewardedItem: _actualRewardValue > 0 ? _actualRewardValue : widget.pointsAwarded,
             rewardType: widget.rewardType,
           ),
         ),

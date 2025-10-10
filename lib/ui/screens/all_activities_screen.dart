@@ -1,14 +1,59 @@
 // ui/screens/all_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/all_activities_provider.dart';
 import '../../../pages/explore_tabs/polls/poll_detail_page.dart';
 import '../../../pages/explore_tabs/quiz/quiz_detail_page.dart';
 import '../../../pages/explore_tabs/survey/survey_detail_page.dart';
 
-class AllPage extends StatelessWidget {
+class AllPage extends StatefulWidget {
   const AllPage({super.key});
+
+  @override
+  State<AllPage> createState() => _AllPageState();
+}
+
+class _AllPageState extends State<AllPage> with TickerProviderStateMixin {
+  late AnimationController _screenController;
+  late Animation<double> _screenOpacity;
+  late Animation<Offset> _screenSlide;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _screenController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _screenOpacity = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _screenController, curve: Curves.easeOutCubic),
+    );
+
+    _screenSlide = Tween<Offset>(
+      begin: const Offset(0, 0.05),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _screenController, curve: Curves.easeOutCubic),
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        context.read<AllActivitiesProvider>().loadAllActivities();
+      }
+      _screenController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _screenController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,75 +62,167 @@ class AllPage extends StatelessWidget {
       return const Scaffold(body: Center(child: Text("User not logged in")));
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AllActivitiesProvider>().loadAllActivities();
-    });
-
     return Scaffold(
-      body: Consumer<AllActivitiesProvider>(
-        builder: (context, provider, child) {
-          final screenWidth = MediaQuery.of(context).size.width;
-          final screenHeight = MediaQuery.of(context).size.height;
+      body: FadeTransition(
+        opacity: _screenOpacity,
+        child: SlideTransition(
+          position: _screenSlide,
+          child: Consumer<AllActivitiesProvider>(
+            builder: (context, provider, child) {
+              final screenWidth = MediaQuery.of(context).size.width;
+              final screenHeight = MediaQuery.of(context).size.height;
 
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+              if (provider.isLoading) {
+                return _buildShimmerLoading(screenWidth, screenHeight);
+              }
 
-          if (provider.error != null) {
-            return Center(child: Text('Error: ${provider.error}'));
-          }
+              if (provider.error != null) {
+                return Center(child: Text('Error: ${provider.error}'));
+              }
 
-          final quickEarnList = provider.quickEarnList;
+              final quickEarnList = provider.quickEarnList;
 
-          return SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.05,
-              vertical: 10,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Featured Offer Banner (keep as-is)
-                _buildFeaturedBanner(screenWidth),
-
-                SizedBox(height: screenHeight * 0.03),
-
-                // Quick Earn Section
-                const Text(
-                  "Quick Earn",
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+              return SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.05,
+                  vertical: 10,
                 ),
-                SizedBox(height: screenHeight * 0.02),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Featured Offer Banner
+                    _AnimatedFeaturedBanner(screenWidth),
 
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: quickEarnList.length,
-                  itemBuilder: (context, index) {
-                    final item = quickEarnList[index];
-                    final activityId = item['activityId'] as String;
-                    final attempted = provider.isAttempted(activityId);
+                    SizedBox(height: screenHeight * 0.03),
 
-                    return _buildQuickEarnCard(
-                      context,
-                      item,
-                      attempted,
-                      currentUser.uid,
-                      screenWidth,
-                    );
-                  },
+                    // Quick Earn Section
+                    const Text(
+                      "Quick Earn",
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+
+                    ...List.generate(
+                      quickEarnList.length,
+                      (index) => _AnimatedQuickEarnCard(
+                        item: quickEarnList[index],
+                        attempted: provider.isAttempted(quickEarnList[index]['activityId'] as String),
+                        userId: currentUser.uid,
+                        screenWidth: screenWidth,
+                        delay: Duration(milliseconds: 100 * index),
+                      ),
+                    ),
+
+                    SizedBox(height: screenHeight * 0.03),
+
+                    // Featured Offers & Tech Challenge
+                    _buildFeaturedAndTechSection(screenWidth, screenHeight),
+                    SizedBox(height: screenHeight * 0.05),
+                  ],
                 ),
-
-                SizedBox(height: screenHeight * 0.03),
-
-                // Featured Offers & Tech Challenge (keep as-is)
-                _buildFeaturedAndTechSection(screenWidth, screenHeight),
-                SizedBox(height: screenHeight * 0.05),
-              ],
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildShimmerLoading(double screenWidth, double screenHeight) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.05,
+        vertical: 10,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              width: double.infinity,
+              height: screenHeight * 0.15,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          SizedBox(height: screenHeight * 0.03),
+          const Text("Quick Earn", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+          SizedBox(height: screenHeight * 0.02),
+          ...List.generate(3, (index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                child: Container(
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            );
+          }),
+          SizedBox(height: screenHeight * 0.03),
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              height: screenHeight * 0.3,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+}
+
+// 🔥 Animated Banner
+class _AnimatedFeaturedBanner extends StatefulWidget {
+  final double screenWidth;
+  const _AnimatedFeaturedBanner(this.screenWidth);
+
+  @override
+  State<_AnimatedFeaturedBanner> createState() => _AnimatedFeaturedBannerState();
+}
+
+class _AnimatedFeaturedBannerState extends State<_AnimatedFeaturedBanner>
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _animation,
+      child: _buildFeaturedBanner(widget.screenWidth),
     );
   }
 
@@ -165,6 +302,80 @@ class AllPage extends StatelessWidget {
       ),
     );
   }
+}
+
+// 🔥 Animated Quick Earn Card (FIXED: uses TickerProviderStateMixin)
+class _AnimatedQuickEarnCard extends StatefulWidget {
+  final Map<String, dynamic> item;
+  final bool attempted;
+  final String userId;
+  final double screenWidth;
+  final Duration delay;
+
+  const _AnimatedQuickEarnCard({
+    required this.item,
+    required this.attempted,
+    required this.userId,
+    required this.screenWidth,
+    required this.delay,
+  });
+
+  @override
+  State<_AnimatedQuickEarnCard> createState() => _AnimatedQuickEarnCardState();
+}
+
+class _AnimatedQuickEarnCardState extends State<_AnimatedQuickEarnCard>
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacity;
+  late Animation<Offset> _offset;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _opacity = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    _offset = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    Future.delayed(widget.delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: SlideTransition(
+        position: _offset,
+        child: _buildQuickEarnCard(
+          context,
+          widget.item,
+          widget.attempted,
+          widget.userId,
+          widget.screenWidth,
+        ),
+      ),
+    );
+  }
 
   Widget _buildQuickEarnCard(
     BuildContext context,
@@ -231,7 +442,9 @@ class AllPage extends StatelessWidget {
             ),
           ),
           if (!attempted)
-            Container(
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutBack,
               width: 40,
               height: 40,
               decoration: BoxDecoration(
@@ -245,15 +458,19 @@ class AllPage extends StatelessWidget {
               ),
             )
           else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                "Done",
-                style: TextStyle(fontSize: 10, color: Colors.white),
+            AnimatedOpacity(
+              opacity: 1.0,
+              duration: const Duration(milliseconds: 400),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  "Done",
+                  style: TextStyle(fontSize: 10, color: Colors.white),
+                ),
               ),
             ),
         ],
@@ -290,10 +507,9 @@ class AllPage extends StatelessWidget {
           description: item['desc'],
           sponsorName: item['sponsorName'],
           sponsorLogo: '',
-          durationSeconds: 300,
           pointsAwarded: int.tryParse(item['points'].toString().split(' ')[0]) ?? 0,
           rewardType: 'Points',
-          questions: questions,
+          questions: [], // Empty list since we fetch from Firestore
           rewardedItem: item['points'],
         );
         break;
@@ -317,8 +533,10 @@ class AllPage extends StatelessWidget {
 
     Navigator.push(context, MaterialPageRoute(builder: (_) => page));
   }
+}
 
-  Widget _buildFeaturedAndTechSection(double screenWidth, double screenHeight) {
+// 🔹 Static section (no animation needed)
+Widget _buildFeaturedAndTechSection(double screenWidth, double screenHeight) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -428,5 +646,4 @@ class AllPage extends StatelessWidget {
         ),
       ],
     );
-  }
 }
