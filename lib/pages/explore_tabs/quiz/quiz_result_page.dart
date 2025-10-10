@@ -14,9 +14,6 @@ class QuizResultPage extends StatelessWidget {
   final bool rewarded;
   final int rewardPoints;
   final String userId;
-  final String? rewardCode;
-  final String? rewardTitle;
-  final String? rewardDescription;
 
   const QuizResultPage({
     Key? key,
@@ -33,9 +30,6 @@ class QuizResultPage extends StatelessWidget {
     required this.rewarded,
     required this.rewardPoints,
     required this.userId,
-    this.rewardCode,
-    this.rewardTitle,
-    this.rewardDescription,
   }) : super(key: key);
 
   @override
@@ -61,48 +55,14 @@ class QuizResultPage extends StatelessWidget {
           children: [
             _buildHeader(),
             const SizedBox(height: 16),
-            Expanded(child: _buildAnalysis()),
+            Expanded(
+              child: _buildAnalysis(),
+            ),
             _buildActionButtons(context),
           ],
         ),
       ),
     );
-  }
-
-  String _getRewardDisplayText() {
-    if (!rewarded) {
-      return "No reward";
-    }
-
-    switch (rewardType.toLowerCase()) {
-      case 'points':
-        return "Reward: $rewardPoints points";
-      case 'voucher':
-        return "Reward: ${rewardTitle ?? 'Voucher'} (Code: ${rewardCode ?? 'N/A'})";
-      case 'product':
-      case 'products':
-        return "Reward: ${rewardTitle ?? 'Product'} (Code: ${rewardCode ?? 'N/A'})";
-      default:
-        return "Reward: ${rewardTitle ?? 'Reward'} (${rewardPoints} points)";
-    }
-  }
-
-  String _getSuccessMessage() {
-    if (!rewarded) {
-      return "Better luck next time!";
-    }
-
-    switch (rewardType.toLowerCase()) {
-      case 'points':
-        return "Congratulations! You earned $rewardPoints points!";
-      case 'voucher':
-        return "Congratulations! You won a ${rewardTitle ?? 'voucher'}! Check your redemptions to claim it.";
-      case 'product':
-      case 'products':
-        return "Congratulations! You won a ${rewardTitle ?? 'product'}! Check your redemptions to claim it.";
-      default:
-        return "Congratulations! You earned a reward!";
-    }
   }
 
   Widget _buildHeader() {
@@ -121,11 +81,8 @@ class QuizResultPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                sponsorName,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text(_getRewardDisplayText()),
+              Text(sponsorName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text("Reward: ${rewardPoints > 0 ? '$rewardPoints points' : 'No reward'}"),
               Text(title, style: const TextStyle(fontSize: 16)),
             ],
           ),
@@ -162,20 +119,19 @@ class QuizResultPage extends StatelessWidget {
                           children: [
                             Text(
                               "Quiz Completed!",
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               "Score: $score / ${questions.length}",
                               style: const TextStyle(fontSize: 18),
                             ),
                             Text(
-                              _getSuccessMessage(),
+                              rewarded ? "Congratulations! You earned $rewardPoints points!" : "Better luck next time!",
                               style: TextStyle(
                                 fontSize: 16,
-                                color: rewarded
-                                    ? Colors.green[700]
-                                    : Colors.orange[700],
+                                color: rewarded ? Colors.green[700] : Colors.orange[700],
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -189,7 +145,7 @@ class QuizResultPage extends StatelessWidget {
             ),
           );
         }
-
+        
         final q = questions[index - 1];
         final userAnswer = answers[index - 1];
         final correctAnswer = q['correct_answer'];
@@ -243,18 +199,14 @@ class QuizResultPage extends StatelessWidget {
                         "Your Answer: ${userAnswer ?? 'Not answered'}",
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          color: isCorrect
-                              ? Colors.green[800]
-                              : Colors.red[800],
+                          color: isCorrect ? Colors.green[800] : Colors.red[800],
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         "Correct Answer: $correctAnswer",
                         style: TextStyle(
-                          color: isCorrect
-                              ? Colors.green[700]
-                              : Colors.red[700],
+                          color: isCorrect ? Colors.green[700] : Colors.red[700],
                         ),
                       ),
                     ],

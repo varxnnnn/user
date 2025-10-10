@@ -118,9 +118,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
 
     int finalRewardPoints = _rewardPoints;
     String? rewardCode;
-    String? actualRewardType;
-    String? rewardTitle;
-    String? rewardDescription;
 
     // Use new reward allocation service if user passed the quiz
     if (allCorrect) {
@@ -135,8 +132,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       if (activityDoc.exists) {
         final activityData = activityDoc.data()!;
         final sponsorId = activityData['sponsor_id'] as String?;
-        final rewardAllocation =
-            activityData['reward_allocation'] as Map<String, dynamic>?;
+        final rewardAllocation = activityData['reward_allocation'] as Map<String, dynamic>?;
         final rewardId = rewardAllocation?['reward_id'] as String?;
 
         if (sponsorId != null && rewardId != null) {
@@ -150,11 +146,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
           if (rewardResult != null) {
             finalRewardPoints = rewardResult['reward_value'] as int? ?? 0;
             rewardCode = rewardResult['reward_code'] as String?;
-            actualRewardType =
-                rewardResult['reward_type'] as String? ?? 'points';
-            rewardTitle = rewardResult['reward_title'] as String? ?? 'Reward';
-            rewardDescription =
-                rewardResult['reward_description'] as String? ?? '';
           }
         }
       }
@@ -165,12 +156,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       'activityTitle': widget.title,
       'description': widget.description,
       'sponsorName': widget.sponsorName,
-      'rewardType':
-          actualRewardType ?? widget.rewardType, // Use actual reward type
+      'rewardType': widget.rewardType,
       'rewardedItem': finalRewardPoints, // Use actual reward value
       'rewardCode': rewardCode, // Include reward code if available
-      'rewardTitle': rewardTitle, // Include reward title
-      'rewardDescription': rewardDescription, // Include reward description
       'score': score,
       'totalQuestions': _questions.length,
       'answers': _answers,
@@ -180,21 +168,19 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     };
 
     try {
-      final userDoc = FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.userId);
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(widget.userId);
 
       // Save to user's quiz_attempts
-      await userDoc
-          .collection('quiz_attempts')
-          .doc(widget.activityId)
-          .set(attemptData);
+      await userDoc.collection('quiz_attempts').doc(widget.activityId).set(attemptData);
+
 
       // Increment activitiesCompleted only once
       await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.userId)
-          .update({'activitiesCompleted': FieldValue.increment(1)});
+          .update({
+        'activitiesCompleted': FieldValue.increment(1),
+      });
 
       // Navigate to QuizResultPage
       if (mounted) {
@@ -206,7 +192,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
               description: widget.description,
               sponsorName: widget.sponsorName,
               sponsorLogo: widget.sponsorLogo,
-              rewardType: actualRewardType ?? widget.rewardType,
+              rewardType: widget.rewardType,
               rewardedItem: widget.rewardedItem,
               questions: _questions,
               answers: _answers,
@@ -214,13 +200,11 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
               rewarded: allCorrect,
               rewardPoints: finalRewardPoints,
               userId: widget.userId,
-              rewardCode: rewardCode,
-              rewardTitle: rewardTitle,
-              rewardDescription: rewardDescription,
             ),
           ),
         );
       }
+
     } catch (e) {
       debugPrint("Error saving quiz attempt: $e");
       if (mounted) {
@@ -264,25 +248,23 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: _submitted
-                      ? const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
+                  child: _submitted 
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
-                            SizedBox(width: 8),
-                            Text("Submitting..."),
-                          ],
-                        )
-                      : const Text("Submit Quiz"),
+                          ),
+                          SizedBox(width: 8),
+                          Text("Submitting..."),
+                        ],
+                      )
+                    : const Text("Submit Quiz"),
                 ),
               ),
           ],
@@ -307,13 +289,8 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                widget.sponsorName,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text(
-                "Reward: ${_rewardPoints > 0 ? '$_rewardPoints points' : 'No reward'}",
-              ),
+              Text(widget.sponsorName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text("Reward: ${_rewardPoints > 0 ? '$_rewardPoints points' : 'No reward'}"),
               Text(widget.title, style: const TextStyle(fontSize: 16)),
             ],
           ),
@@ -346,14 +323,11 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "${index + 1}. ${q['question_text']}",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+                Text("${index + 1}. ${q['question_text']}", style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 ...List<Widget>.generate(
                   (q['options'] as List<dynamic>).length,
-                  (optIndex) {
+                      (optIndex) {
                     final option = q['options'][optIndex];
                     return RadioListTile<String>(
                       value: option,
@@ -374,4 +348,5 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       },
     );
   }
+
 }
