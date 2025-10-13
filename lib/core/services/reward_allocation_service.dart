@@ -3,9 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class RewardAllocationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Allocates a reward to a user when they complete an activity
-  /// GUARANTEES a reward will be allocated - creates fallback if no assigned items available
-  /// Returns the allocated reward data or null if allocation fails
+  /// Allocates a reward to a user when they complete an activity.
+  /// Guarantees allocation for coins/points via fallback; returns null for non-fallbackable types if no items available.
   Future<Map<String, dynamic>?> allocateRewardToUser({
     required String activityId,
     required String userId,
@@ -13,146 +12,118 @@ class RewardAllocationService {
     required String rewardId,
   }) async {
     try {
-      // Get the activity data to check reward allocation
+      // 1️⃣ Fetch activity
       final activityDoc = await _firestore
           .collection('sponsor_activities')
           .doc(activityId)
           .get();
-
-      if (!activityDoc.exists) {
-        throw Exception('Activity not found');
-      }
-
+      if (!activityDoc.exists) throw Exception('Activity not found');
       final activityData = activityDoc.data()!;
       final rewardAllocation =
           activityData['reward_allocation'] as Map<String, dynamic>?;
-
       if (rewardAllocation == null) {
         throw Exception('No reward allocation found for this activity');
       }
 
-      // Get the reward type from the sponsor_rewards collection using the reward_id
+      // 2️⃣ Fetch reward
       final rewardDoc = await _firestore
           .collection('sponsor_rewards')
           .doc(rewardId)
           .get();
-
-      if (!rewardDoc.exists) {
-        throw Exception('Reward not found');
-      }
-
+      if (!rewardDoc.exists) throw Exception('Reward not found');
       final rewardData = rewardDoc.data()!;
-      final rewardType = rewardData['type'] as String? ?? 'points';
+      final rewardType = (rewardData['type'] as String?)?.toLowerCase() ?? 'points';
       final rewardTitle = rewardData['title'] as String? ?? 'Reward';
       final rewardDescription = rewardData['description'] as String? ?? '';
 
       final assignedItemIds =
-          rewardAllocation['assigned_item_ids'] as List<dynamic>? ?? [];
-      final remainingQuantity =
-          rewardAllocation['remaining_quantity'] as int? ?? 0;
+          List<String>.from(rewardAllocation['assigned_item_ids'] ?? []);
+      final remainingQuantity = rewardAllocation['remaining_quantity'] as int? ?? 0;
 
-      String? selectedRewardId;
+      String? selectedItemId;
       int rewardValue = 0;
       String rewardCode = '';
 
-      print('Reward type detected: $rewardType');
-      print('Reward title: $rewardTitle');
-
-      // Try to find an unused reward from assigned_item_ids first
+      // 3️⃣ Try to find an available assigned item
       if (remainingQuantity > 0 && assignedItemIds.isNotEmpty) {
-        for (String itemId in assignedItemIds) {
-          // Check if this reward item is available (not assigned to any user)
-          final rewardItemDoc = await _firestore
+        for (final itemId in assignedItemIds) {
+          final itemDoc = await _firestore
               .collection('sponsor_rewards')
-              .doc(sponsorId)
+              .doc(rewardId)
               .collection('items')
               .doc(itemId)
               .get();
 
-          if (rewardItemDoc.exists) {
-            final rewardItemData = rewardItemDoc.data()!;
-            final assignedTo = rewardItemData['assigned_to'];
-            final status = rewardItemData['status'];
-
-            // Check if this reward item is available (not assigned to any user)
-            if (assignedTo == null && status == 'assigned') {
-              selectedRewardId = itemId;
+          if (itemDoc.exists) {
+            final itemData = itemDoc.data()!;
+            if (itemData['assigned_to'] == null &&
+                (itemData['status'] == null || itemData['status'] == 'assigned')) {
+              selectedItemId = itemId;
+              // Extract value: support both direct 'value' and nested 'metadata.coins.amount'
+              final metadata = itemData['metadata'] as Map<String, dynamic>? ?? {};
+              final coins = metadata['coins'] as Map<String, dynamic>? ?? {};
+              rewardValue = coins['amount'] as int? ??
+                  itemData['value'] as int? ??
+                  0;
+              rewardCode = itemData['code'] as String? ??
+                  'REWARD-${DateTime.now().millisecondsSinceEpoch}';
               break;
             }
           }
         }
       }
 
-      // If no assigned item available, create a fallback reward
-      if (selectedRewardId == null) {
-        print(
-          'No assigned items available, creating fallback reward for activity: $activityId',
-        );
+      // 4️⃣ Fallback for coins/points only
+      if (selectedItemId == null) {
+        print('⚠️ No assigned items available for activity $activityId');
+        if (['coins', 'points'].contains(rewardType)) {
+          selectedItemId = 'fallback_${DateTime.now().millisecondsSinceEpoch}';
+          rewardValue = rewardData['value'] as int? ?? 0;
+          rewardCode = 'FALLBACK-${DateTime.now().millisecondsSinceEpoch}';
 
-        // Create a fallback reward with default values
-        selectedRewardId = 'fallback_${DateTime.now().millisecondsSinceEpoch}';
-        rewardValue = 50; // Default fallback reward value
-        rewardCode = 'FALLBACK-${DateTime.now().millisecondsSinceEpoch}';
-
-        // Create the fallback reward item in sponsor_rewards
-        await _firestore
-            .collection('sponsor_rewards')
-            .doc(sponsorId)
-            .collection('items')
-            .doc(selectedRewardId)
-            .set({
-              'activity_id': activityId,
-              'assigned_at': FieldValue.serverTimestamp(),
-              'assigned_to': null,
-              'code': rewardCode,
-              'created_at': FieldValue.serverTimestamp(),
-              'status': 'assigned',
-              'value': rewardValue,
-            });
-      }
-
-      // Get the reward details from sponsor_rewards (if not already set from fallback)
-      if (rewardValue == 0) {
-        final rewardDoc = await _firestore
-            .collection('sponsor_rewards')
-            .doc(sponsorId)
-            .collection('items')
-            .doc(selectedRewardId)
-            .get();
-
-        if (!rewardDoc.exists) {
-          throw Exception('Reward item not found');
+          // Create fallback item under the correct reward
+          await _firestore
+              .collection('sponsor_rewards')
+              .doc(rewardId)
+              .collection('items')
+              .doc(selectedItemId)
+              .set({
+            'activity_id': activityId,
+            'assigned_at': FieldValue.serverTimestamp(),
+            'assigned_to': null,
+            'code': rewardCode,
+            'created_at': FieldValue.serverTimestamp(),
+            'status': 'assigned',
+            'value': rewardValue, // Optional: also store directly for simplicity
+            'metadata': {
+              'coins': {'amount': rewardValue}
+            },
+          });
+        } else {
+          // Non-fallbackable types (voucher/product) → fail gracefully
+          return null;
         }
-
-        final rewardData = rewardDoc.data()!;
-        rewardValue =
-            rewardData['value'] as int? ?? 50; // Default to 50 if not found
-        rewardCode =
-            rewardData['code'] as String? ??
-            'REWARD-${DateTime.now().millisecondsSinceEpoch}';
       }
 
-      print('Reward value: $rewardValue');
-
-      // Update the reward item to assign it to the user
+      // 5️⃣ Assign item to user
       await _firestore
           .collection('sponsor_rewards')
-          .doc(sponsorId)
+          .doc(rewardId)
           .collection('items')
-          .doc(selectedRewardId)
+          .doc(selectedItemId!)
           .update({
-            'assigned_to': userId,
-            'status': 'issued',
-            'issued_at': FieldValue.serverTimestamp(),
-          });
+        'assigned_to': userId,
+        'status': 'issued',
+        'issued_at': FieldValue.serverTimestamp(),
+      });
 
-      // Create reward assignment record
+      // 6️⃣ Create assignment record
       final assignmentId = _firestore.collection('reward_assignments').doc().id;
       await _firestore.collection('reward_assignments').doc(assignmentId).set({
         'activity_id': activityId,
         'user_id': userId,
         'sponsor_id': sponsorId,
-        'assigned_item_id': selectedRewardId,
+        'assigned_item_id': selectedItemId,
         'reward_id': rewardId,
         'value': rewardValue,
         'code': rewardCode,
@@ -162,80 +133,68 @@ class RewardAllocationService {
         'created_at': FieldValue.serverTimestamp(),
       });
 
-      // Update activity's remaining quantity
+      // 7️⃣ Decrement remaining quantity
       await _firestore.collection('sponsor_activities').doc(activityId).update({
         'reward_allocation.remaining_quantity': FieldValue.increment(-1),
       });
 
-      // Handle different reward types appropriately
-      print('Processing reward type: $rewardType for user: $userId');
-
-      if (rewardType == 'points') {
-        // For points-based rewards, add to user's wallet
-        print('Adding $rewardValue points to user wallet');
-        await _firestore.collection('users').doc(userId).update({
-          'points': FieldValue.increment(rewardValue),
-        });
-        print('Successfully added $rewardValue points to user $userId wallet');
-      } else if (rewardType == 'voucher' ||
-          rewardType == 'product' ||
-          rewardType == 'products') {
-        // For vouchers and products, create redemption record instead of adding points
-        print('Creating redemption record for $rewardType reward');
-        final redemptionDoc = await _firestore.collection('redemptions').add({
+      // 8️⃣ Apply reward logic
+      if (['coins', 'points'].contains(rewardType)) {
+        if (rewardValue > 0) {
+          await _firestore.collection('users').doc(userId).update({
+            'points': FieldValue.increment(rewardValue),
+          });
+          print('✅ Added $rewardValue $rewardType to user $userId');
+        }
+      } else if (['voucher', 'product', 'products'].contains(rewardType)) {
+        await _firestore.collection('redemptions').add({
           'user_id': userId,
           'reward_id': rewardId,
           'status': 'pending',
           'delivery_info': {'address': '', 'contact': ''},
           'redeemed_at': FieldValue.serverTimestamp(),
         });
-        print(
-          'Successfully created redemption record ${redemptionDoc.id} for user $userId',
-        );
-      } else {
-        print('Unknown reward type: $rewardType, defaulting to points');
-        await _firestore.collection('users').doc(userId).update({
-          'points': FieldValue.increment(rewardValue),
-        });
+        print('🎁 Created redemption for $rewardType');
       }
 
-      // Add to user's earned rewards
+      // 9️⃣ Record in user's earned rewards
       await _firestore
           .collection('users')
           .doc(userId)
           .collection('rewards_earned')
           .doc(activityId)
           .set({
-            'activity_id': activityId,
-            'reward_assignment_id': assignmentId,
-            'reward_value': rewardValue,
-            'reward_code': rewardCode,
-            'assigned_item_id': selectedRewardId,
-            'sponsor_id': sponsorId,
-            'reward_type': rewardType,
-            'reward_title': rewardTitle,
-            'reward_description': rewardDescription,
-            'status': 'issued',
-            'issued_at': FieldValue.serverTimestamp(),
-            'timestamp': FieldValue.serverTimestamp(),
-          });
+        'activity_id': activityId,
+        'reward_assignment_id': assignmentId,
+        'reward_value': rewardValue,
+        'reward_code': rewardCode,
+        'assigned_item_id': selectedItemId,
+        'sponsor_id': sponsorId,
+        'reward_type': rewardType,
+        'reward_title': rewardTitle,
+        'reward_description': rewardDescription,
+        'status': 'issued',
+        'issued_at': FieldValue.serverTimestamp(),
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
       return {
         'assignment_id': assignmentId,
         'reward_value': rewardValue,
         'reward_code': rewardCode,
-        'assigned_item_id': selectedRewardId,
+        'assigned_item_id': selectedItemId,
         'reward_type': rewardType,
         'reward_title': rewardTitle,
         'status': 'issued',
       };
-    } catch (e) {
-      print('Error allocating reward: $e');
+
+    } catch (e, stack) {
+      print('❌ Error allocating reward: $e\n$stack');
       return null;
     }
   }
 
-  /// Checks if user has already completed an activity
+  // --- Remaining helper methods unchanged ---
   Future<bool> hasUserCompletedActivity({
     required String activityId,
     required String userId,
@@ -247,7 +206,6 @@ class RewardAllocationService {
           .collection('rewards_earned')
           .doc(activityId)
           .get();
-
       return doc.exists;
     } catch (e) {
       print('Error checking activity completion: $e');
@@ -255,7 +213,6 @@ class RewardAllocationService {
     }
   }
 
-  /// Gets user's earned rewards
   Future<List<Map<String, dynamic>>> getUserEarnedRewards(String userId) async {
     try {
       final snapshot = await _firestore
@@ -282,20 +239,16 @@ class RewardAllocationService {
     }
   }
 
-  /// Gets available rewards for an activity
   Future<Map<String, dynamic>?> getActivityRewardInfo(String activityId) async {
     try {
       final doc = await _firestore
           .collection('sponsor_activities')
           .doc(activityId)
           .get();
-
       if (!doc.exists) return null;
 
       final data = doc.data()!;
-      final rewardAllocation =
-          data['reward_allocation'] as Map<String, dynamic>?;
-
+      final rewardAllocation = data['reward_allocation'] as Map<String, dynamic>?;
       if (rewardAllocation == null) return null;
 
       return {
