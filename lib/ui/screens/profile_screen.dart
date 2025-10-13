@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:giftardo/providers/profile_provider.dart';
+import 'package:giftardo/providers/rewards_display_provider.dart';
+import '../components/loading_components.dart';
+import '../components/rewards_display_widget.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -47,8 +50,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       body: Consumer<ProfileProvider>(
         builder: (context, provider, child) {
+          double screenWidth = MediaQuery.of(context).size.width;
+          double screenHeight = MediaQuery.of(context).size.height;
+          
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return LoadingComponents.profileScreenLoading(screenWidth, screenHeight);
           }
 
           // ✅ Only use fields from your schema
@@ -60,9 +66,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           // Level based on points
           final currentLevel = (points ~/ 1000) + 1;
-
-          double screenWidth = MediaQuery.of(context).size.width;
-          double screenHeight = MediaQuery.of(context).size.height;
 
           return SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
@@ -201,6 +204,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
+                SizedBox(height: screenHeight * 0.03),
+
+                // Rewards Display Section
+                const RewardsDisplayWidget(),
                 SizedBox(height: screenHeight * 0.03),
 
                 // Settings & Preferences

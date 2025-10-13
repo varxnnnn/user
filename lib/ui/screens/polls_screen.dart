@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/poll_provider.dart';
 import '../../pages/explore_tabs/polls/poll_detail_page.dart'; // keep your existing detail page
+import '../components/loading_components.dart';
 
 class PollsScreen extends StatelessWidget {
   const PollsScreen({super.key});
@@ -26,7 +27,10 @@ class PollsScreen extends StatelessWidget {
       body: Consumer<PollProvider>(
         builder: (context, pollProvider, child) {
           if (pollProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return LoadingComponents.listScreenLoading(
+              MediaQuery.of(context).size.width,
+              MediaQuery.of(context).size.height,
+            );
           }
 
           if (pollProvider.error != null) {

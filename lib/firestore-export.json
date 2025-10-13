@@ -1,0 +1,3011 @@
+{
+  "activity_questions": {
+    "6f1abaab-ef0a-4462-ba7e-6262a19d18dc": {
+      "question_text": "color of sky",
+      "options": [
+        "red",
+        "blue"
+      ],
+      "correct_answer": "blue",
+      "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+      "created_at": {
+        "_seconds": 1759634478,
+        "_nanoseconds": 861000000
+      }
+    }
+  },
+  "activity_reports": {
+    "VCXzBt7pQ65NiiRjkyXD": {
+      "completed_users": 1,
+      "activity_id": "dme0nff062rIoFB2j5KY",
+      "total_users": 1,
+      "total_points_distributed": 50,
+      "pending_users": 0,
+      "created_at": {
+        "_seconds": 1759342096,
+        "_nanoseconds": 669000000
+      }
+    }
+  },
+  "admin_logs": {
+    "j6cz8Hq9S6mP4MvK8GS8": {
+      "action": "Created",
+      "entity": "user",
+      "description": "Created Alice user account",
+      "entity_id": "XJbMjdIItQOLHEl6nibXJI5HFZk2",
+      "admin_id": "I2NY6MRocSibXUvFedLv",
+      "created_at": {
+        "_seconds": 1759342084,
+        "_nanoseconds": 163000000
+      }
+    }
+  },
+  "admins": {
+    "2ljlg0h63rgL7Y77QKad": {
+      "role": "superadmin",
+      "created_at": {
+        "_seconds": 1759427349,
+        "_nanoseconds": 327940000
+      },
+      "email": "v@gmail.com",
+      "name": "varun",
+      "updated_at": {
+        "_seconds": 1759427349,
+        "_nanoseconds": 327940000
+      },
+      "phone": "9391711401"
+    }
+  },
+  "leaderboard": {
+    "YYRfewWt9ACYK1YM7yR5": {
+      "points": 150,
+      "user_id": "XJbMjdIItQOLHEl6nibXJI5HFZk2",
+      "rank": 1,
+      "updated_at": {
+        "_seconds": 1759342100,
+        "_nanoseconds": 0
+      }
+    }
+  },
+  "notifications": {
+    "H1F9RHysgDptSErdKcop": {
+      "user_id": "XJbMjdIItQOLHEl6nibXJI5HFZk2",
+      "message": "Welcome to platform",
+      "title": "Welcome",
+      "type": "info",
+      "read": false,
+      "created_at": {
+        "_seconds": 1759342099,
+        "_nanoseconds": 630000000
+      }
+    }
+  },
+  "redemptions": {
+    "o8Ar7ynnKvuQ60S7HKEA": {
+      "reward_id": "ZHsRPaaRnbkBYODQiB3B",
+      "status": "pending",
+      "user_id": "XJbMjdIItQOLHEl6nibXJI5HFZk2",
+      "delivery_info": {
+        "address": "Hyderabad",
+        "contact": "9999999999"
+      },
+      "redeemed_at": {
+        "_seconds": 1759342096,
+        "_nanoseconds": 337000000
+      }
+    }
+  },
+  "referrals": {
+    "MYaN5W3hNnm8m2quy6tG": {
+      "status": "pending",
+      "referred_user_id": "xstl2WC4fuT5pP0Xan22o6Qrfyp1",
+      "referral_code": "REF123",
+      "user_id": "XJbMjdIItQOLHEl6nibXJI5HFZk2",
+      "created_at": {
+        "_seconds": 1759342098,
+        "_nanoseconds": 297000000
+      }
+    }
+  },
+  "reward_assignments": {
+    "tFd2ebjBzq2QlqYntaSz": {
+      "code": "FALLBACK-1759634549838",
+      "user_id": "92vo2HPirEcFm5sPaMMmNzBnAOr2",
+      "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+      "reward_id": "VsRwGM5Q80Y605RyXiya",
+      "assigned_item_id": "fallback_1759634549834",
+      "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+      "value": 50,
+      "status": "issued",
+      "assigned_at": {
+        "_seconds": 1759634551,
+        "_nanoseconds": 841000000
+      },
+      "created_at": {
+        "_seconds": 1759634551,
+        "_nanoseconds": 841000000
+      },
+      "issued_at": {
+        "_seconds": 1759634551,
+        "_nanoseconds": 841000000
+      }
+    }
+  },
+  "reward_redemptions_report": {
+    "x0Sp1iOV2aHXS4q8pWAm": {
+      "pending_redemptions": 0,
+      "delivered": 0,
+      "total_redeemed": 1,
+      "shipped": 0,
+      "reward_id": "ZHsRPaaRnbkBYODQiB3B",
+      "created_at": {
+        "_seconds": 1759342097,
+        "_nanoseconds": 960000000
+      }
+    }
+  },
+  "sponsor_activities": {
+    "d8c8e22f-8a85-436d-99e2-e12b16ca027b": {
+      "targeting": {
+        "max_age": 60,
+        "min_age": 18
+      },
+      "expiry_date": {
+        "_seconds": 1762226476,
+        "_nanoseconds": 708000000
+      },
+      "description": "q1",
+      "rules": {
+        "attempts_allowed": 2
+      },
+      "title": "q1",
+      "type": "quiz",
+      "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+      "status": "active",
+      "updated_at": {
+        "_seconds": 1759634477,
+        "_nanoseconds": 466000000
+      },
+      "created_at": {
+        "_seconds": 1759634477,
+        "_nanoseconds": 466000000
+      },
+      "reward_allocation": {
+        "reward_id": "VsRwGM5Q80Y605RyXiya",
+        "allocated_quantity": 10,
+        "assigned_item_ids": [
+          "0UZ2TYPJxYmqTyk8rKpX",
+          "0nyWhVSibauBd7ZpyX8i",
+          "2w83Zhfh9aAL9tsMSaHO",
+          "5BJ4evatinXsHk6zKnLx",
+          "5RBGuxigCqCQHTZXUAvs",
+          "5uFaMuluzN7IZSx2LZSF",
+          "6Lmx3eTvwGpYWv0WhK7S",
+          "6Qu8HuOgy8qijE9KL47I",
+          "7c5heDooWKxMZAU9Iugm",
+          "8itWVZFgSy2s3iwgAPG7"
+        ],
+        "assigned_at": {
+          "_seconds": 1759634484,
+          "_nanoseconds": 166000000
+        },
+        "remaining_quantity": 9
+      },
+      "questions": {
+        "6f1abaab-ef0a-4462-ba7e-6262a19d18dc": {
+          "question_text": "color of sky",
+          "options": [
+            "red",
+            "blue"
+          ],
+          "correct_answer": "blue",
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "created_at": {
+            "_seconds": 1759634479,
+            "_nanoseconds": 346000000
+          }
+        }
+      }
+    }
+  },
+  "sponsor_rewards": {
+    "VsRwGM5Q80Y605RyXiya": {
+      "metadata": {
+        "voucher": {
+          "currency": "INR",
+          "value": 200
+        }
+      },
+      "description": "rq",
+      "total_quantity": 100,
+      "title": "r1",
+      "type": "voucher",
+      "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+      "status": "active",
+      "created_at": {
+        "_seconds": 1759634385,
+        "_nanoseconds": 333000000
+      },
+      "available_quantity": 90,
+      "updated_at": {
+        "_seconds": 1759634481,
+        "_nanoseconds": 964000000
+      },
+      "items": {
+        "0UZ2TYPJxYmqTyk8rKpX": {
+          "code": "VOUCHER-856029522",
+          "value": 200,
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          },
+          "assigned_at": {
+            "_seconds": 1759634483,
+            "_nanoseconds": 606000000
+          },
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "status": "assigned"
+        },
+        "0nyWhVSibauBd7ZpyX8i": {
+          "code": "VOUCHER-856063743",
+          "value": 200,
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          },
+          "assigned_at": {
+            "_seconds": 1759634483,
+            "_nanoseconds": 606000000
+          },
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "status": "assigned"
+        },
+        "2w83Zhfh9aAL9tsMSaHO": {
+          "code": "VOUCHER-856011951",
+          "value": 200,
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          },
+          "assigned_at": {
+            "_seconds": 1759634483,
+            "_nanoseconds": 606000000
+          },
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "status": "assigned"
+        },
+        "5BJ4evatinXsHk6zKnLx": {
+          "code": "VOUCHER-856008860",
+          "value": 200,
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          },
+          "assigned_at": {
+            "_seconds": 1759634483,
+            "_nanoseconds": 606000000
+          },
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "status": "assigned"
+        },
+        "5RBGuxigCqCQHTZXUAvs": {
+          "code": "VOUCHER-855901917",
+          "value": 200,
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          },
+          "assigned_at": {
+            "_seconds": 1759634483,
+            "_nanoseconds": 606000000
+          },
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "status": "assigned"
+        },
+        "5uFaMuluzN7IZSx2LZSF": {
+          "code": "VOUCHER-855998476",
+          "value": 200,
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          },
+          "assigned_at": {
+            "_seconds": 1759634483,
+            "_nanoseconds": 606000000
+          },
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "status": "assigned"
+        },
+        "6Lmx3eTvwGpYWv0WhK7S": {
+          "code": "VOUCHER-855882498",
+          "value": 200,
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          },
+          "assigned_at": {
+            "_seconds": 1759634483,
+            "_nanoseconds": 606000000
+          },
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "status": "assigned"
+        },
+        "6Qu8HuOgy8qijE9KL47I": {
+          "code": "VOUCHER-855907551",
+          "value": 200,
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          },
+          "assigned_at": {
+            "_seconds": 1759634483,
+            "_nanoseconds": 606000000
+          },
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "status": "assigned"
+        },
+        "7c5heDooWKxMZAU9Iugm": {
+          "code": "VOUCHER-855981853",
+          "value": 200,
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          },
+          "assigned_at": {
+            "_seconds": 1759634483,
+            "_nanoseconds": 606000000
+          },
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "status": "assigned"
+        },
+        "8itWVZFgSy2s3iwgAPG7": {
+          "code": "VOUCHER-856065006",
+          "value": 200,
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          },
+          "assigned_at": {
+            "_seconds": 1759634483,
+            "_nanoseconds": 606000000
+          },
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "status": "assigned"
+        },
+        "8qrBsJfxWC4IE30L6NL7": {
+          "code": "VOUCHER-856047463",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "9ysuu1bCCbL44JuaxEXw": {
+          "code": "VOUCHER-855928926",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "Ad5L7SYluXyebZ2ML7Nf": {
+          "code": "VOUCHER-856083117",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "AjCEFn1MTn6meZucVZIG": {
+          "code": "VOUCHER-856008555",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "BpftXZ4H3yFMTd9ewxqv": {
+          "code": "VOUCHER-856003300",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "Byo65QwzHSjwxZdY76tQ": {
+          "code": "VOUCHER-856041687",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "C21rGAYNAjVDOjquskqr": {
+          "code": "VOUCHER-855922623",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "CheefdLjvxkkzIuCzdhT": {
+          "code": "VOUCHER-856084206",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "D6XGScJ979e4xjUQa49k": {
+          "code": "VOUCHER-856017086",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "EId3fmTi2CuymmxDZ0Hx": {
+          "code": "VOUCHER-855964437",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "Ej8FSIVXT4nBckj63HdU": {
+          "code": "VOUCHER-856039207",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "Er14951XVQHrcQ1pMiN3": {
+          "code": "VOUCHER-856065357",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "FUKdKiRz7MaAwsTVSYQN": {
+          "code": "VOUCHER-856000014",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "G3N3hXGcbXsuFpP0fi0G": {
+          "code": "VOUCHER-856072782",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "G7ny0p7jojg7QuvOIzMY": {
+          "code": "VOUCHER-855886176",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "GaLr4TXCxUsmYgWZFQJh": {
+          "code": "VOUCHER-856045807",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "HQs3RpWglBmRDQyfFDbX": {
+          "code": "VOUCHER-855993125",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "Hpw0Dzb4a6aB1dOF8JxG": {
+          "code": "VOUCHER-856018678",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "I5coYHjxZ0MO6Vj3ttLr": {
+          "code": "VOUCHER-856016885",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "IPxVywK5CXoxqI6gjFCJ": {
+          "code": "VOUCHER-856098027",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "J4DTNrMTWzhYDQmwh0UI": {
+          "code": "VOUCHER-855999890",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "KhViBeFnHNa9bzWsmPZq": {
+          "code": "VOUCHER-855993378",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "L8amQvLwQogYSnJhbH47": {
+          "code": "VOUCHER-855990925",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "LUiOcvqIfEI7gDGgRE0n": {
+          "code": "VOUCHER-855994350",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "MCQ04H83oEJTqDUlvy8l": {
+          "code": "VOUCHER-855974441",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "MrwKbIHhccMzXQkpecu9": {
+          "code": "VOUCHER-856011707",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "N43X4mszQOMcfeqif1Sr": {
+          "code": "VOUCHER-855962853",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "Njb1buRAyBoXG8BpHFn3": {
+          "code": "VOUCHER-856012474",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "OGzudxAqg1YLgJuJp68O": {
+          "code": "VOUCHER-856006387",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "P6DDvmTb7QlqDwA7FUun": {
+          "code": "VOUCHER-856063134",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "R5GKFdqNuoqNRoSNKFFG": {
+          "code": "VOUCHER-856098674",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "TPkHKNnKbF09AWYmLFRt": {
+          "code": "VOUCHER-856007026",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "V9gb8sVEPxSZWnloMJUy": {
+          "code": "VOUCHER-855920846",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "VW7Ld7sOxOjCto51kE4I": {
+          "code": "VOUCHER-855925286",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "VWfNH6tNU9vuXwsTOX6q": {
+          "code": "VOUCHER-855922666",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "XhNkW716OdTNRgB1VEql": {
+          "code": "VOUCHER-855864406",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "XlVtwKWRd3884VbkX5sh": {
+          "code": "VOUCHER-856053102",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "ZAW7qdkV5pHaIqQIrvGW": {
+          "code": "VOUCHER-855980090",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "ZuLE6TBXi1fTK1p9CeKw": {
+          "code": "VOUCHER-855894536",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "anGKdKa6KU00oc9guJu1": {
+          "code": "VOUCHER-855975570",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "b6KaZBq0bBsNm0z8FD5W": {
+          "code": "VOUCHER-855890464",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "c66h273ncMeZpix6ZWqh": {
+          "code": "VOUCHER-856053608",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "c8z7txfWEgS7YUIBqkCr": {
+          "code": "VOUCHER-856019806",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "cDHmy9pgsIU3qm77N8X3": {
+          "code": "VOUCHER-855927317",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "df0hRhu1D8vJvM5xwjru": {
+          "code": "VOUCHER-856090136",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "e9oT6Z7WOloFZTrzeKCQ": {
+          "code": "VOUCHER-856011970",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "eKjRnlYC0dnTnMNlviy6": {
+          "code": "VOUCHER-856018885",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "fdJPcQaBanEH0o4NwDHy": {
+          "code": "VOUCHER-856043992",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "gILmQ9rIU2E1ST4mLTPP": {
+          "code": "VOUCHER-855925639",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "gNuf95sPjPDB7nNDQ6x9": {
+          "code": "VOUCHER-855911931",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "hWbOT82nbVRCRpwhrlHg": {
+          "code": "VOUCHER-855845310",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "hoR4vGDTFQEnL7m2XXSY": {
+          "code": "VOUCHER-856005454",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "iSMlGoY7zNFXipq1zOx2": {
+          "code": "VOUCHER-856003235",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "jN9xaTjUP3SaXFyLro4B": {
+          "code": "VOUCHER-855961522",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "jhe1TtkzL7PWTNF2PrAk": {
+          "code": "VOUCHER-856009423",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "ksLB8E0X4CDoGPktff92": {
+          "code": "VOUCHER-856002586",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "l0fKwbQqgL8YJRercKxH": {
+          "code": "VOUCHER-855927589",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "lAONDvCKSZa1Zuhh29st": {
+          "code": "VOUCHER-855985599",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "lfUnD91bYGHMioPoRlWl": {
+          "code": "VOUCHER-855889429",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "mGSROhZT9dtosScngMuS": {
+          "code": "VOUCHER-856076815",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "nTL6Zmy0SxibClQGFwdd": {
+          "code": "VOUCHER-855873998",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "ngbVYA0AZLa2wQYaeC87": {
+          "code": "VOUCHER-855856816",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "nirjqEjfRXLHrTcBxoA6": {
+          "code": "VOUCHER-856015822",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "oVLTbpW4ujMtkqpfbgOi": {
+          "code": "VOUCHER-856000777",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "ovqOdt7Wc5WGoNSND1tQ": {
+          "code": "VOUCHER-855905318",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "paBIcHIjwADCYNYCRLCz": {
+          "code": "VOUCHER-855953343",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "ppf8KorPJBJEWbl9DZEZ": {
+          "code": "VOUCHER-856019784",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "psIJliZHmI8wzsO0JGC8": {
+          "code": "VOUCHER-856010218",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "qKya2trO3iwj2eXmbgqD": {
+          "code": "VOUCHER-856059470",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "qVnqAvWKJPofRtqyWTrC": {
+          "code": "VOUCHER-856044723",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "qlbVtEzxgYgW6CCpNWLe": {
+          "code": "VOUCHER-856034526",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "rttzyTC6Zw4E0rjdnX8K": {
+          "code": "VOUCHER-856003411",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "tWpnLKhFtkjVTI7ND3v0": {
+          "code": "VOUCHER-855993222",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "tgMIsRdaC8nKFRokuxoI": {
+          "code": "VOUCHER-855992974",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "uUZr1M05dPucoZnjshjC": {
+          "code": "VOUCHER-855899682",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "ueqlBCDfydVG9UCFt6VO": {
+          "code": "VOUCHER-855983791",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "vE4A7Fz0v7I5lyxua0P7": {
+          "code": "VOUCHER-856019125",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "vchdFmlu764NyOu52izK": {
+          "code": "VOUCHER-856096203",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "w0c0YRKk5mfsp6NoGDJO": {
+          "code": "VOUCHER-856099654",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "wrdTLspuHiGkMwb5RGNz": {
+          "code": "VOUCHER-856034165",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "x9B8E0Fge9pldZo2OyiF": {
+          "code": "VOUCHER-856029379",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "xJstIr5kiPNoEGTzPhBy": {
+          "code": "VOUCHER-855857803",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "xUXfDcA2mDpCP0xgbY1n": {
+          "code": "VOUCHER-855913959",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "y6Yr5QfaBIa46bEQFFhF": {
+          "code": "VOUCHER-856050112",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "ySWNkOE0GAO5OGpI1WMr": {
+          "code": "VOUCHER-855922155",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "ytcbVGqARAorCZqGuN3G": {
+          "code": "VOUCHER-855907475",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "yucKuFaCG7cEjAi1clZw": {
+          "code": "VOUCHER-855987047",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "z7J5d582seUHUbY5VhA6": {
+          "code": "VOUCHER-855994450",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "zejdQu97MEzYg7nex0PJ": {
+          "code": "VOUCHER-856013860",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        },
+        "zha1Wr1fiEXNocjHuWwr": {
+          "code": "VOUCHER-856052134",
+          "activity_id": null,
+          "value": 200,
+          "status": "available",
+          "assigned_to": null,
+          "created_at": {
+            "_seconds": 1759634386,
+            "_nanoseconds": 344000000
+          }
+        }
+      }
+    }
+  },
+  "sponsor_users": {
+    "D6fa58kgwQfPnACNagKtfYpr1D63": {
+      "role": "manager",
+      "name": "kumar",
+      "email": "k@sponsor.com",
+      "created_at": {
+        "_seconds": 1759418031,
+        "_nanoseconds": 622000000
+      }
+    },
+    "qfxU5C3QbycwlU4kIz5SjY5WyTs1": {
+      "name": "SponsorUser1",
+      "sponsor_id": "7Da5uAFpCP47HntnAh4o",
+      "role": "manager",
+      "email": "suser1@coca.com",
+      "phone": "5555555555",
+      "updated_at": {
+        "_seconds": 1759342086,
+        "_nanoseconds": 816000000
+      },
+      "created_at": {
+        "_seconds": 1759342086,
+        "_nanoseconds": 816000000
+      }
+    }
+  },
+  "sponsors": {
+    "VfrROcbOudcLkqrgLEnd": {
+      "created_at": {
+        "_seconds": 1759427595,
+        "_nanoseconds": 46225000
+      },
+      "updated_at": {
+        "_seconds": 1759427595,
+        "_nanoseconds": 46225000
+      },
+      "address": "hyd",
+      "contact_person": "Kumar",
+      "email": "nike@gmail.com",
+      "phone": "9391711401",
+      "name": "Nike",
+      "status": "active",
+      "activities": {
+        "08a9711c-eeb3-4388-8bc6-793359f75c67": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762196132,
+            "_nanoseconds": 934000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759604133,
+            "_nanoseconds": 609000000
+          },
+          "created_at": {
+            "_seconds": 1759604133,
+            "_nanoseconds": 609000000
+          },
+          "questions": {
+            "a878e466-e1ca-43cf-b0b0-8ae42ef3904c": {
+              "question_text": "color of sky",
+              "options": [
+                "redd",
+                "bllue"
+              ],
+              "correct_answer": "bllue",
+              "activity_id": "08a9711c-eeb3-4388-8bc6-793359f75c67",
+              "created_at": {
+                "_seconds": 1759604135,
+                "_nanoseconds": 9000000
+              }
+            }
+          }
+        },
+        "09a2f152-1094-474f-a66a-f6a775053822": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762224974,
+            "_nanoseconds": 486000000
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 2
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759632975,
+            "_nanoseconds": 291000000
+          },
+          "created_at": {
+            "_seconds": 1759632975,
+            "_nanoseconds": 291000000
+          },
+          "reward_allocation": {
+            "reward_id": "gwHFqCKW4Ct4Vg8Aa13i",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10,
+            "assigned_item_ids": [
+              "0LQAECPFecqiJ3ZaKpL8",
+              "13TwheVGAzpp1GuhEUIB",
+              "1L4PRxWrvo0nSZ40d9f6",
+              "1l9d12fCcmojavwK1WQa",
+              "2qMgI0PI3m29sN6uvbly",
+              "2qW3A2PM4qRuDTK2pzLq",
+              "2zuTx0XCNTzwjqAEUBMq",
+              "4cG6cnpT8owLctC55p3Y",
+              "6dmnUiej7pqXciMtZd9x",
+              "6rybhJiz8YC6KliXwZS5"
+            ],
+            "assigned_at": {
+              "_seconds": 1759632985,
+              "_nanoseconds": 531000000
+            }
+          },
+          "questions": {
+            "b2d4082c-158d-4b3f-a7dd-b24d6b900d6b": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "09a2f152-1094-474f-a66a-f6a775053822",
+              "created_at": {
+                "_seconds": 1759632977,
+                "_nanoseconds": 511000000
+              }
+            }
+          }
+        },
+        "0dabf76f-565b-41ab-aeab-c6dea3310108": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762196145,
+            "_nanoseconds": 253000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759604145,
+            "_nanoseconds": 904000000
+          },
+          "created_at": {
+            "_seconds": 1759604145,
+            "_nanoseconds": 904000000
+          },
+          "questions": {
+            "2375e831-e192-4ed8-9129-d3ea1e74e71c": {
+              "question_text": "color of sky",
+              "options": [
+                "redd",
+                "bllue"
+              ],
+              "correct_answer": "bllue",
+              "activity_id": "0dabf76f-565b-41ab-aeab-c6dea3310108",
+              "created_at": {
+                "_seconds": 1759604147,
+                "_nanoseconds": 249000000
+              }
+            }
+          }
+        },
+        "13fcac50-014c-4e7e-8ee6-56042eca92f6": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762196046,
+            "_nanoseconds": 504000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759604047,
+            "_nanoseconds": 209000000
+          },
+          "created_at": {
+            "_seconds": 1759604047,
+            "_nanoseconds": 209000000
+          },
+          "questions": {
+            "6d4bf4e6-8d36-4d77-8031-4bfb28a161f8": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "13fcac50-014c-4e7e-8ee6-56042eca92f6",
+              "created_at": {
+                "_seconds": 1759604050,
+                "_nanoseconds": 119000000
+              }
+            },
+            "fef080d1-0e37-418d-b5bd-3ec4b51a5da7": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "13fcac50-014c-4e7e-8ee6-56042eca92f6",
+              "created_at": {
+                "_seconds": 1759604048,
+                "_nanoseconds": 709000000
+              }
+            }
+          }
+        },
+        "3147837c-0f6f-45f0-8a07-decac089a8c3": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762194883,
+            "_nanoseconds": 102000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 20,
+            "remaining_quantity": 20
+          },
+          "description": "100 voucher available",
+          "rules": {
+            "attempts_allowed": 2
+          },
+          "title": "voucher quiz",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759602883,
+            "_nanoseconds": 883000000
+          },
+          "created_at": {
+            "_seconds": 1759602883,
+            "_nanoseconds": 883000000
+          },
+          "questions": {
+            "3d7fe7ec-eed6-4056-83d3-dbe1f099bc41": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "3147837c-0f6f-45f0-8a07-decac089a8c3",
+              "created_at": {
+                "_seconds": 1759602887,
+                "_nanoseconds": 464000000
+              }
+            },
+            "8c556371-f981-48bd-93d8-2fabf54c7dff": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "3147837c-0f6f-45f0-8a07-decac089a8c3",
+              "created_at": {
+                "_seconds": 1759602892,
+                "_nanoseconds": 384000000
+              }
+            }
+          }
+        },
+        "353122f2-a69e-4cfb-aa67-bc5ee84e23cc": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762031136,
+            "_nanoseconds": 807000000
+          },
+          "reward_allocation": {
+            "reward_id": "ny7R7kd9uZJ2YsZPfDL5",
+            "allocated_quantity": 100,
+            "remaining_quantity": 100
+          },
+          "description": "more time more coins",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "buzz coins",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759439138,
+            "_nanoseconds": 891000000
+          },
+          "created_at": {
+            "_seconds": 1759439138,
+            "_nanoseconds": 891000000
+          },
+          "questions": {
+            "02f7af10-dfa7-4b6b-a10e-ac4357438c55": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "353122f2-a69e-4cfb-aa67-bc5ee84e23cc",
+              "created_at": {
+                "_seconds": 1759439148,
+                "_nanoseconds": 972000000
+              }
+            },
+            "408f4d08-b370-4f91-af34-87c81bcb5ef8": {
+              "question_text": "capital of India",
+              "options": [
+                "Hyderabad",
+                "Delhi"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "353122f2-a69e-4cfb-aa67-bc5ee84e23cc",
+              "created_at": {
+                "_seconds": 1759439160,
+                "_nanoseconds": 611000000
+              }
+            }
+          }
+        },
+        "38b574f8-d223-4883-9d8d-bc1cf1cf3d4f": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762196116,
+            "_nanoseconds": 19000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759604116,
+            "_nanoseconds": 714000000
+          },
+          "created_at": {
+            "_seconds": 1759604116,
+            "_nanoseconds": 714000000
+          },
+          "questions": {
+            "d6338670-6e9e-416d-b16b-c0129cd2b95e": {
+              "question_text": "color of sky",
+              "options": [
+                "redd",
+                "bllue"
+              ],
+              "correct_answer": "bllue",
+              "activity_id": "38b574f8-d223-4883-9d8d-bc1cf1cf3d4f",
+              "created_at": {
+                "_seconds": 1759604118,
+                "_nanoseconds": 589000000
+              }
+            }
+          }
+        },
+        "3c4da512-fc57-439d-b899-cf0c9bf7c7a0": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762196098,
+            "_nanoseconds": 95000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759604098,
+            "_nanoseconds": 829000000
+          },
+          "created_at": {
+            "_seconds": 1759604098,
+            "_nanoseconds": 829000000
+          },
+          "questions": {
+            "c44953b0-76c5-4d78-ba04-7d97148f0197": {
+              "question_text": "color of sky",
+              "options": [
+                "redd",
+                "bllue"
+              ],
+              "correct_answer": "bllue",
+              "activity_id": "3c4da512-fc57-439d-b899-cf0c9bf7c7a0",
+              "created_at": {
+                "_seconds": 1759604100,
+                "_nanoseconds": 249000000
+              }
+            }
+          }
+        },
+        "422b3a41-0f1f-4ab7-9c89-0a527c529a79": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762196004,
+            "_nanoseconds": 647000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759604005,
+            "_nanoseconds": 469000000
+          },
+          "created_at": {
+            "_seconds": 1759604005,
+            "_nanoseconds": 469000000
+          },
+          "questions": {
+            "b4d3f131-1374-4e4c-8a91-e5aba668eef3": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "422b3a41-0f1f-4ab7-9c89-0a527c529a79",
+              "created_at": {
+                "_seconds": 1759604008,
+                "_nanoseconds": 889000000
+              }
+            },
+            "bb467b7b-f7c7-41ef-aba7-b239db9c03b1": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "422b3a41-0f1f-4ab7-9c89-0a527c529a79",
+              "created_at": {
+                "_seconds": 1759604007,
+                "_nanoseconds": 89000000
+              }
+            }
+          }
+        },
+        "786ea4a7-3837-436e-9539-18e5334d3673": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762196056,
+            "_nanoseconds": 0
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759604056,
+            "_nanoseconds": 669000000
+          },
+          "created_at": {
+            "_seconds": 1759604056,
+            "_nanoseconds": 669000000
+          },
+          "questions": {
+            "b66d2ae6-4ac3-4813-b9a5-aa985706f6c8": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "786ea4a7-3837-436e-9539-18e5334d3673",
+              "created_at": {
+                "_seconds": 1759604060,
+                "_nanoseconds": 149000000
+              }
+            },
+            "fcef3005-db80-409b-9d37-32d94c1a58b1": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "786ea4a7-3837-436e-9539-18e5334d3673",
+              "created_at": {
+                "_seconds": 1759604058,
+                "_nanoseconds": 589000000
+              }
+            }
+          }
+        },
+        "78994348-17b6-45f1-855d-00ad5bfa2f3f": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762194953,
+            "_nanoseconds": 703000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 20,
+            "remaining_quantity": 20
+          },
+          "description": "100 voucher available",
+          "rules": {
+            "attempts_allowed": 2
+          },
+          "title": "voucher quiz",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759602954,
+            "_nanoseconds": 912000000
+          },
+          "created_at": {
+            "_seconds": 1759602954,
+            "_nanoseconds": 912000000
+          },
+          "questions": {
+            "1b63ca7f-c61b-430b-9954-8f2258491b61": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "78994348-17b6-45f1-855d-00ad5bfa2f3f",
+              "created_at": {
+                "_seconds": 1759602956,
+                "_nanoseconds": 452000000
+              }
+            },
+            "705ac39f-e222-4499-9fc5-dae26f4c7247": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "78994348-17b6-45f1-855d-00ad5bfa2f3f",
+              "created_at": {
+                "_seconds": 1759602958,
+                "_nanoseconds": 92000000
+              }
+            }
+          }
+        },
+        "7faaf63f-dd45-403d-9857-3b143913f3b4": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762196867,
+            "_nanoseconds": 117000000
+          },
+          "description": "q2",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 2",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759604868,
+            "_nanoseconds": 536000000
+          },
+          "created_at": {
+            "_seconds": 1759604868,
+            "_nanoseconds": 536000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10,
+            "assigned_item_ids": [
+              "0313VmmoVLin01Nzz4Ge",
+              "0qPk5GSQn5aUajlXYj6x",
+              "1oaUq8Npr4CiJvaOldMP",
+              "3k5AGlH2LTMuNpCV8W9d",
+              "57yzG0TEGhHx0MN1o40I",
+              "7uYvy7eNNcMTsSWqsErT",
+              "80ATg9neusegQ1ZcsUTh",
+              "8uH4Y6EROre148KD6y53",
+              "8wIPr8CWR5T1I1wWUlA2",
+              "AOw1ONQRIcYhKX8kLgUK"
+            ],
+            "assigned_at": {
+              "_seconds": 1759604876,
+              "_nanoseconds": 461000000
+            }
+          },
+          "questions": {
+            "1257de68-18af-4133-acce-8ba9847b1ad6": {
+              "question_text": "color of grass",
+              "options": [
+                "green",
+                "yellow"
+              ],
+              "correct_answer": "green",
+              "activity_id": "7faaf63f-dd45-403d-9857-3b143913f3b4",
+              "created_at": {
+                "_seconds": 1759604870,
+                "_nanoseconds": 336000000
+              }
+            }
+          }
+        },
+        "807c49f6-bf64-4392-976e-f36c3cdcd0f3": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762195881,
+            "_nanoseconds": 559000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759603883,
+            "_nanoseconds": 116000000
+          },
+          "created_at": {
+            "_seconds": 1759603883,
+            "_nanoseconds": 116000000
+          },
+          "questions": {
+            "3cb89189-19bc-462d-8b93-3cfa2298389e": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "807c49f6-bf64-4392-976e-f36c3cdcd0f3",
+              "created_at": {
+                "_seconds": 1759603886,
+                "_nanoseconds": 791000000
+              }
+            },
+            "bccaa3e6-3d27-4f6f-a91e-e04621169c97": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "807c49f6-bf64-4392-976e-f36c3cdcd0f3",
+              "created_at": {
+                "_seconds": 1759603885,
+                "_nanoseconds": 111000000
+              }
+            }
+          }
+        },
+        "8a118b47-3214-4363-8027-9b5259443fca": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762196066,
+            "_nanoseconds": 206000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759604066,
+            "_nanoseconds": 964000000
+          },
+          "created_at": {
+            "_seconds": 1759604066,
+            "_nanoseconds": 964000000
+          },
+          "questions": {
+            "e09275a4-20cb-483d-bcb4-5d45f6ce8653": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "8a118b47-3214-4363-8027-9b5259443fca",
+              "created_at": {
+                "_seconds": 1759604069,
+                "_nanoseconds": 28000000
+              }
+            },
+            "f0c35fcf-61d4-4db0-aa9c-6df313d7b415": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "8a118b47-3214-4363-8027-9b5259443fca",
+              "created_at": {
+                "_seconds": 1759604070,
+                "_nanoseconds": 408000000
+              }
+            }
+          }
+        },
+        "90d7138e-206d-48d4-966a-96a5a665c55e": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762194840,
+            "_nanoseconds": 390000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 20,
+            "remaining_quantity": 20
+          },
+          "description": "100 voucher available",
+          "rules": {
+            "attempts_allowed": 2
+          },
+          "title": "voucher quiz",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759602841,
+            "_nanoseconds": 904000000
+          },
+          "created_at": {
+            "_seconds": 1759602841,
+            "_nanoseconds": 904000000
+          },
+          "questions": {
+            "0b214eab-9e01-4f72-a4d2-e052f5b51df5": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "90d7138e-206d-48d4-966a-96a5a665c55e",
+              "created_at": {
+                "_seconds": 1759602845,
+                "_nanoseconds": 504000000
+              }
+            },
+            "c384731f-eefc-4b82-aed3-a4ee44ccc83e": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "90d7138e-206d-48d4-966a-96a5a665c55e",
+              "created_at": {
+                "_seconds": 1759602843,
+                "_nanoseconds": 443000000
+              }
+            }
+          }
+        },
+        "9af1b462-fd8a-4360-a6c7-23f6e4649d2e": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762196200,
+            "_nanoseconds": 221000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759604200,
+            "_nanoseconds": 908000000
+          },
+          "created_at": {
+            "_seconds": 1759604200,
+            "_nanoseconds": 908000000
+          },
+          "questions": {
+            "c77b16d9-a69a-4343-99d3-cafe1e798c1f": {
+              "question_text": "color of sky",
+              "options": [
+                "redd",
+                "bllue"
+              ],
+              "correct_answer": "bllue",
+              "activity_id": "9af1b462-fd8a-4360-a6c7-23f6e4649d2e",
+              "created_at": {
+                "_seconds": 1759604202,
+                "_nanoseconds": 649000000
+              }
+            }
+          }
+        },
+        "9c8655f3-00b3-4353-a7af-99683553e064": {
+          "expiry_date": {
+            "_seconds": 1762066169,
+            "_nanoseconds": 779000000
+          },
+          "status": "active",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "reward_allocation": {
+            "allocated_quantity": 1,
+            "remaining_quantity": 1,
+            "reward_id": "YBZiXSYyAzK5yLJstLTT"
+          },
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "description": "Participate and win",
+          "title": "Grab a  Aur Jordan 1",
+          "type": "survey",
+          "updated_at": {
+            "_seconds": 1759474171,
+            "_nanoseconds": 214000000
+          },
+          "created_at": {
+            "_seconds": 1759474171,
+            "_nanoseconds": 214000000
+          },
+          "questions": {
+            "60b04c10-3b57-4b10-87ae-1e93e272bd0f": {
+              "options": [
+                "varun",
+                "sai teja",
+                "sairammm",
+                "hallo"
+              ],
+              "activity_id": "9c8655f3-00b3-4353-a7af-99683553e064",
+              "correct_answer": "sairammm",
+              "question_text": "Who is founder of Nike  ?",
+              "created_at": {
+                "_seconds": 1759474172,
+                "_nanoseconds": 302000000
+              }
+            }
+          }
+        },
+        "c8e7b25e-acd2-45c3-9e4f-42175cc1b20d": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762196342,
+            "_nanoseconds": 345000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 2
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759604343,
+            "_nanoseconds": 676000000
+          },
+          "created_at": {
+            "_seconds": 1759604343,
+            "_nanoseconds": 676000000
+          },
+          "questions": {
+            "279289b9-c42c-4509-9305-e6c43418d079": {
+              "question_text": "color of sky",
+              "options": [
+                "blue",
+                "red"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "c8e7b25e-acd2-45c3-9e4f-42175cc1b20d",
+              "created_at": {
+                "_seconds": 1759604345,
+                "_nanoseconds": 27000000
+              }
+            },
+            "a5e91a04-f833-4db3-a7f5-ed1fe286402b": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "c8e7b25e-acd2-45c3-9e4f-42175cc1b20d",
+              "created_at": {
+                "_seconds": 1759604346,
+                "_nanoseconds": 536000000
+              }
+            }
+          }
+        },
+        "d8c8e22f-8a85-436d-99e2-e12b16ca027b": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762226476,
+            "_nanoseconds": 708000000
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 2
+          },
+          "title": "q1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759634478,
+            "_nanoseconds": 407000000
+          },
+          "created_at": {
+            "_seconds": 1759634478,
+            "_nanoseconds": 407000000
+          },
+          "reward_allocation": {
+            "reward_id": "VsRwGM5Q80Y605RyXiya",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10,
+            "assigned_item_ids": [
+              "0UZ2TYPJxYmqTyk8rKpX",
+              "0nyWhVSibauBd7ZpyX8i",
+              "2w83Zhfh9aAL9tsMSaHO",
+              "5BJ4evatinXsHk6zKnLx",
+              "5RBGuxigCqCQHTZXUAvs",
+              "5uFaMuluzN7IZSx2LZSF",
+              "6Lmx3eTvwGpYWv0WhK7S",
+              "6Qu8HuOgy8qijE9KL47I",
+              "7c5heDooWKxMZAU9Iugm",
+              "8itWVZFgSy2s3iwgAPG7"
+            ],
+            "assigned_at": {
+              "_seconds": 1759634484,
+              "_nanoseconds": 706000000
+            }
+          },
+          "questions": {
+            "6f1abaab-ef0a-4462-ba7e-6262a19d18dc": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+              "created_at": {
+                "_seconds": 1759634479,
+                "_nanoseconds": 847000000
+              }
+            }
+          }
+        },
+        "de5a39b6-cad8-42b5-9890-45a0c3f2b402": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762195024,
+            "_nanoseconds": 512000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 20,
+            "remaining_quantity": 20
+          },
+          "description": "100 voucher available",
+          "rules": {
+            "attempts_allowed": 2
+          },
+          "title": "voucher quiz",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759603025,
+            "_nanoseconds": 332000000
+          },
+          "created_at": {
+            "_seconds": 1759603025,
+            "_nanoseconds": 332000000
+          },
+          "questions": {
+            "0e173a17-d078-42de-a02a-c82e912b538d": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "de5a39b6-cad8-42b5-9890-45a0c3f2b402",
+              "created_at": {
+                "_seconds": 1759603027,
+                "_nanoseconds": 192000000
+              }
+            },
+            "fd73fed0-5eb7-4d2b-bf7a-3ccdfc662c72": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "de5a39b6-cad8-42b5-9890-45a0c3f2b402",
+              "created_at": {
+                "_seconds": 1759603029,
+                "_nanoseconds": 672000000
+              }
+            }
+          }
+        },
+        "e17e513b-0af2-4013-90f2-0f74169aa0fc": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762195993,
+            "_nanoseconds": 146000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 10,
+            "remaining_quantity": 10
+          },
+          "description": "q1",
+          "rules": {
+            "attempts_allowed": 1
+          },
+          "title": "quiz 1",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759603994,
+            "_nanoseconds": 909000000
+          },
+          "created_at": {
+            "_seconds": 1759603994,
+            "_nanoseconds": 909000000
+          },
+          "questions": {
+            "19d7346b-c72d-4158-895c-7a952139653f": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "e17e513b-0af2-4013-90f2-0f74169aa0fc",
+              "created_at": {
+                "_seconds": 1759603996,
+                "_nanoseconds": 709000000
+              }
+            },
+            "2cf17a90-c012-408f-aca0-f937ea72b777": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "e17e513b-0af2-4013-90f2-0f74169aa0fc",
+              "created_at": {
+                "_seconds": 1759603998,
+                "_nanoseconds": 368000000
+              }
+            }
+          }
+        },
+        "f4568939-fa13-47a2-aa39-df130ad0e768": {
+          "targeting": {
+            "max_age": 60,
+            "min_age": 18
+          },
+          "expiry_date": {
+            "_seconds": 1762194975,
+            "_nanoseconds": 785000000
+          },
+          "reward_allocation": {
+            "reward_id": "VoFlr9Q09VMaHGXS9d8P",
+            "allocated_quantity": 20,
+            "remaining_quantity": 20
+          },
+          "description": "100 voucher available",
+          "rules": {
+            "attempts_allowed": 2
+          },
+          "title": "voucher quiz",
+          "type": "quiz",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "active",
+          "updated_at": {
+            "_seconds": 1759602977,
+            "_nanoseconds": 352000000
+          },
+          "created_at": {
+            "_seconds": 1759602977,
+            "_nanoseconds": 352000000
+          },
+          "questions": {
+            "9722e89c-e780-4fb3-a7d7-a25b708906a5": {
+              "question_text": "capital of India",
+              "options": [
+                "Delhi",
+                "Hyderabad"
+              ],
+              "correct_answer": "Delhi",
+              "activity_id": "f4568939-fa13-47a2-aa39-df130ad0e768",
+              "created_at": {
+                "_seconds": 1759602980,
+                "_nanoseconds": 312000000
+              }
+            },
+            "d8deff18-3309-44f9-a949-2c11f41a151a": {
+              "question_text": "color of sky",
+              "options": [
+                "red",
+                "blue"
+              ],
+              "correct_answer": "blue",
+              "activity_id": "f4568939-fa13-47a2-aa39-df130ad0e768",
+              "created_at": {
+                "_seconds": 1759602978,
+                "_nanoseconds": 692000000
+              }
+            }
+          }
+        }
+      },
+      "rewards": {
+        "YBZiXSYyAzK5yLJstLTT": {
+          "expiry_date": {
+            "_seconds": 1762066067,
+            "_nanoseconds": 442000000
+          },
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "title": "Air Jordan 1",
+          "status": "active",
+          "type": "products",
+          "reward_id": "YBZiXSYyAzK5yLJstLTT",
+          "cost_points": 2500,
+          "description": "shoes ",
+          "updated_at": {
+            "_seconds": 1759474068,
+            "_nanoseconds": 694000000
+          },
+          "created_at": {
+            "_seconds": 1759474068,
+            "_nanoseconds": 694000000
+          },
+          "stock": 9
+        },
+        "ny7R7kd9uZJ2YsZPfDL5": {
+          "cost_points": 198,
+          "reward_id": "ny7R7kd9uZJ2YsZPfDL5",
+          "type": "points",
+          "description": "more time more coins ",
+          "title": "Buzz coins",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "expiry_date": {
+            "_seconds": 1762025044,
+            "_nanoseconds": 883000000
+          },
+          "created_at": {
+            "_seconds": 1759433049,
+            "_nanoseconds": 376000000
+          },
+          "updated_at": {
+            "_seconds": 1759433143,
+            "_nanoseconds": 446000000
+          },
+          "status": "active",
+          "stock": 100
+        }
+      }
+    }
+  },
+  "tasks": {
+    "Z2gzzu82pju0bTZjMG8n": {
+      "reward": {
+        "points": 50
+      },
+      "is_active": true,
+      "description": "Complete task Complete 2 Quizzes",
+      "title": "Complete 2 Quizzes",
+      "type": "quiz",
+      "condition": {
+        "count": 2
+      },
+      "created_at": {
+        "_seconds": 1759342093,
+        "_nanoseconds": 460000000
+      }
+    }
+  },
+  "user_answers": {
+    "9VOtv54jTxGCd49mjwWI": {
+      "text_answer": null,
+      "user_id": "XJbMjdIItQOLHEl6nibXJI5HFZk2",
+      "selected_option_ids": [
+        2
+      ],
+      "question_id": "JPgoIDpcaIdwcF7Yeyap",
+      "points_earned": 10,
+      "answered_at": {
+        "_seconds": 1759342093,
+        "_nanoseconds": 135000000
+      }
+    }
+  },
+  "user_tasks": {
+    "fH5mxoC6A0W9hEmO37mx": {
+      "status": "in_progress",
+      "user_id": "XJbMjdIItQOLHEl6nibXJI5HFZk2",
+      "task_id": "Z2gzzu82pju0bTZjMG8n",
+      "progress": 1,
+      "last_updated": {
+        "_seconds": 1759342094,
+        "_nanoseconds": 716000000
+      }
+    }
+  },
+  "users": {
+    "0MLKjb9FFnZeicr7Jd5njWMqiv82": {
+      "gender": "Male",
+      "age": 1,
+      "phone": "+911111111111",
+      "name": "sai1",
+      "points": 0,
+      "location": "011",
+      "email": "sai1@gmail.com",
+      "updated_at": {
+        "_seconds": 1759422035,
+        "_nanoseconds": 591000000
+      },
+      "created_at": {
+        "_seconds": 1759422035,
+        "_nanoseconds": 591000000
+      }
+    },
+    "92vo2HPirEcFm5sPaMMmNzBnAOr2": {
+      "gender": "Male",
+      "phone": "+911111111111",
+      "name": "Kumar",
+      "location": "hyd",
+      "email": "k@gmail.com",
+      "age": 20,
+      "created_at": {
+        "_seconds": 1759516565,
+        "_nanoseconds": 649000000
+      },
+      "updated_at": {
+        "_seconds": 1759516573,
+        "_nanoseconds": 243000000
+      },
+      "referralCode": "KUMAAOR2",
+      "points": 150,
+      "activitiesCompleted": 6,
+      "quiz_attempts": {
+        "d8c8e22f-8a85-436d-99e2-e12b16ca027b": {
+          "totalQuestions": 1,
+          "rewardType": "Points",
+          "sponsorName": "Sponsor",
+          "answers": [
+            "blue"
+          ],
+          "description": "q1",
+          "userId": "92vo2HPirEcFm5sPaMMmNzBnAOr2",
+          "activityId": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "score": 1,
+          "activityTitle": "q1",
+          "rewarded": true,
+          "rewardCode": "FALLBACK-1759634549838",
+          "rewardedItem": 50,
+          "timestamp": {
+            "_seconds": 1759634553,
+            "_nanoseconds": 801000000
+          }
+        }
+      },
+      "rewards_earned": {
+        "d8c8e22f-8a85-436d-99e2-e12b16ca027b": {
+          "reward_assignment_id": "tFd2ebjBzq2QlqYntaSz",
+          "reward_value": 50,
+          "activity_id": "d8c8e22f-8a85-436d-99e2-e12b16ca027b",
+          "reward_code": "FALLBACK-1759634549838",
+          "assigned_item_id": "fallback_1759634549834",
+          "sponsor_id": "VfrROcbOudcLkqrgLEnd",
+          "status": "issued",
+          "issued_at": {
+            "_seconds": 1759634553,
+            "_nanoseconds": 322000000
+          },
+          "timestamp": {
+            "_seconds": 1759634553,
+            "_nanoseconds": 322000000
+          }
+        }
+      }
+    },
+    "P6Ray4JA8sN1J1ThS5I7JbCdMx52": {
+      "location": "Hyderabad",
+      "email": "demo@gmail.com",
+      "gender": "Male",
+      "age": 18,
+      "points": 0,
+      "phone": "1111111111",
+      "name": "demo",
+      "created_at": {
+        "_seconds": 1759348010,
+        "_nanoseconds": 144000000
+      },
+      "updated_at": {
+        "_seconds": 1759348067,
+        "_nanoseconds": 719000000
+      },
+      "referralCode": "DEMOMX52",
+      "activitiesCompleted": 2,
+      "quiz_attempts": {
+        "353122f2-a69e-4cfb-aa67-bc5ee84e23cc": {
+          "answers": [],
+          "totalQuestions": 0,
+          "description": "more time more coins",
+          "rewardedItem": 0,
+          "score": 0,
+          "rewardType": "Points",
+          "userId": "P6Ray4JA8sN1J1ThS5I7JbCdMx52",
+          "sponsorName": "Sponsor",
+          "rewarded": true,
+          "activityTitle": "buzz coins",
+          "activityId": "353122f2-a69e-4cfb-aa67-bc5ee84e23cc",
+          "timestamp": {
+            "_seconds": 1759459671,
+            "_nanoseconds": 864000000
+          }
+        },
+        "dme0nff062rIoFB2j5KY": {
+          "rewarded": true,
+          "description": "Dummy description for Coke Quiz",
+          "score": 0,
+          "activityId": "dme0nff062rIoFB2j5KY",
+          "rewardType": "Points",
+          "totalQuestions": 0,
+          "sponsorName": "Sponsor",
+          "answers": [],
+          "userId": "P6Ray4JA8sN1J1ThS5I7JbCdMx52",
+          "rewardedItem": 59,
+          "activityTitle": "Coke Quiz",
+          "timestamp": {
+            "_seconds": 1759348033,
+            "_nanoseconds": 755000000
+          }
+        }
+      },
+      "rewards_earned": {
+        "353122f2-a69e-4cfb-aa67-bc5ee84e23cc": {
+          "rewardedItem": 0,
+          "activityId": "353122f2-a69e-4cfb-aa67-bc5ee84e23cc",
+          "activityTitle": "buzz coins",
+          "rewardType": "Points",
+          "timestamp": {
+            "_seconds": 1759459673,
+            "_nanoseconds": 725000000
+          }
+        },
+        "dme0nff062rIoFB2j5KY": {
+          "activityTitle": "Coke Quiz",
+          "rewardedItem": 59,
+          "activityId": "dme0nff062rIoFB2j5KY",
+          "rewardType": "Points",
+          "timestamp": {
+            "_seconds": 1759348035,
+            "_nanoseconds": 365000000
+          }
+        }
+      }
+    },
+    "XJbMjdIItQOLHEl6nibXJI5HFZk2": {
+      "name": "Alice",
+      "gender": "Female",
+      "age": 25,
+      "phone": "9999999999",
+      "points": 0,
+      "location": "Hyderabad",
+      "updated_at": {
+        "_seconds": 1759342080,
+        "_nanoseconds": 564000000
+      },
+      "created_at": {
+        "_seconds": 1759342080,
+        "_nanoseconds": 564000000
+      }
+    },
+    "bHIWpVLMHsMJaYpPSqGFbP0uf8E2": {
+      "gender": "Male",
+      "phone": "+917013216952",
+      "name": "K",
+      "location": "gyd",
+      "email": "l@gmail.com",
+      "age": 20,
+      "points": 0,
+      "created_at": {
+        "_seconds": 1759517037,
+        "_nanoseconds": 857000000
+      },
+      "updated_at": {
+        "_seconds": 1759517042,
+        "_nanoseconds": 537000000
+      },
+      "referralCode": "KF8E2",
+      "activitiesCompleted": 2,
+      "quiz_attempts": {
+        "353122f2-a69e-4cfb-aa67-bc5ee84e23cc": {
+          "activityId": "353122f2-a69e-4cfb-aa67-bc5ee84e23cc",
+          "score": 0,
+          "totalQuestions": 0,
+          "activityTitle": "buzz coins",
+          "rewarded": true,
+          "rewardType": "Points",
+          "sponsorName": "Sponsor",
+          "answers": [],
+          "description": "more time more coins",
+          "rewardedItem": 0,
+          "userId": "bHIWpVLMHsMJaYpPSqGFbP0uf8E2",
+          "timestamp": {
+            "_seconds": 1759517390,
+            "_nanoseconds": 175000000
+          }
+        },
+        "dme0nff062rIoFB2j5KY": {
+          "activityId": "dme0nff062rIoFB2j5KY",
+          "score": 0,
+          "totalQuestions": 0,
+          "activityTitle": "Coke Quiz",
+          "rewarded": true,
+          "rewardType": "Points",
+          "sponsorName": "Sponsor",
+          "answers": [],
+          "description": "Dummy description for Coke Quiz",
+          "rewardedItem": 59,
+          "userId": "bHIWpVLMHsMJaYpPSqGFbP0uf8E2",
+          "timestamp": {
+            "_seconds": 1759517403,
+            "_nanoseconds": 50000000
+          }
+        }
+      },
+      "rewards_earned": {
+        "353122f2-a69e-4cfb-aa67-bc5ee84e23cc": {
+          "activityId": "353122f2-a69e-4cfb-aa67-bc5ee84e23cc",
+          "activityTitle": "buzz coins",
+          "rewardType": "Points",
+          "rewardedItem": 0,
+          "timestamp": {
+            "_seconds": 1759517392,
+            "_nanoseconds": 110000000
+          }
+        },
+        "dme0nff062rIoFB2j5KY": {
+          "activityId": "dme0nff062rIoFB2j5KY",
+          "activityTitle": "Coke Quiz",
+          "rewardType": "Points",
+          "rewardedItem": 59,
+          "timestamp": {
+            "_seconds": 1759517405,
+            "_nanoseconds": 55000000
+          }
+        }
+      }
+    },
+    "xstl2WC4fuT5pP0Xan22o6Qrfyp1": {
+      "name": "Bob",
+      "gender": "Male",
+      "age": 28,
+      "phone": "8888888888",
+      "points": 0,
+      "location": "Bengaluru",
+      "updated_at": {
+        "_seconds": 1759342082,
+        "_nanoseconds": 280000000
+      },
+      "created_at": {
+        "_seconds": 1759342082,
+        "_nanoseconds": 280000000
+      }
+    }
+  }
+}

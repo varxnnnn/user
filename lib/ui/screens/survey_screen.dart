@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/survey_provider.dart';
 import '../../../pages/explore_tabs/survey/survey_detail_page.dart'; // keep your existing page
+import '../components/loading_components.dart';
 
 class SurveysScreen extends StatelessWidget {
   const SurveysScreen({super.key});
@@ -25,7 +26,10 @@ class SurveysScreen extends StatelessWidget {
       body: Consumer<SurveyProvider>(
         builder: (context, surveyProvider, child) {
           if (surveyProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return LoadingComponents.listScreenLoading(
+              MediaQuery.of(context).size.width,
+              MediaQuery.of(context).size.height,
+            );
           }
 
           if (surveyProvider.error != null) {

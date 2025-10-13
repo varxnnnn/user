@@ -83,16 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               _emailController.text.trim(),
                               _passwordController.text.trim(),
                             );
-
-                            // On success, navigate
-                            if (authProvider.error == null) {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const MainScreen(),
-                                ),
-                              );
-                            }
+                            // Navigation is now handled by AuthWrapper
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange,
