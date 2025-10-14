@@ -35,6 +35,10 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
   bool _loadingQuestions = true;
   bool _isSubmitting = false;
   int _actualRewardValue = 0;
+  String? _rewardCode;
+  String? _actualRewardType;
+  String? _rewardTitle;
+  String? _rewardDescription;
 
   @override
   void initState() {
@@ -94,10 +98,19 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
         'sponsorName': widget.sponsorName,
         'rewardType': widget.rewardType,
         'rewardedItem': 0,
+        'rewardCode': null,
+        'rewardTitle': null,
+        'rewardDescription': null,
         'answers': _answers.map((k, v) => MapEntry(k.toString(), v)),
         'timestamp': FieldValue.serverTimestamp(),
         'userId': widget.userId,
       });
+
+      // Increment activitiesCompleted (always, like quiz behavior)
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .update({'activitiesCompleted': FieldValue.increment(1)});
 
       // Allocate reward
       final rewardService = RewardAllocationService();
@@ -106,7 +119,7 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
           .doc(widget.activityId)
           .get();
 
-      if (activityDoc.exists) {
+        if (activityDoc.exists) {
         final data = activityDoc.data()!;
         final sponsorId = data['sponsor_id'] as String?;
         final rewardAllocation = data['reward_allocation'] as Map<String, dynamic>?;
@@ -122,6 +135,20 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
 
           if (rewardResult != null) {
             _actualRewardValue = rewardResult['reward_value'] as int? ?? 0;
+            _rewardCode = rewardResult['reward_code'] as String?;
+            _actualRewardType = rewardResult['reward_type'] as String? ?? widget.rewardType;
+            _rewardTitle = rewardResult['reward_title'] as String?;
+            _rewardDescription = rewardResult['reward_description'] as String?;
+
+            await userRef.collection('survey_attempts').doc(widget.activityId).update({
+              'rewardedItem': _actualRewardValue,
+              'rewardCode': _rewardCode,
+              'rewardTitle': _rewardTitle,
+              'rewardDescription': _rewardDescription,
+              'rewardType': _actualRewardType,
+            });
+
+      // activitiesCompleted already incremented earlier; no-op here
           }
         }
       }
@@ -136,7 +163,10 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
               answers: _answers,
               rewardedItem:
               _actualRewardValue > 0 ? _actualRewardValue : widget.pointsAwarded,
-              rewardType: widget.rewardType,
+              rewardType: _actualRewardType ?? widget.rewardType,
+              rewardCode: _rewardCode,
+              rewardTitle: _rewardTitle,
+              rewardDescription: _rewardDescription,
             ),
           ),
         );
