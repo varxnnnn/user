@@ -30,15 +30,19 @@ class _MilestonePageState extends State<MilestonePage>
     );
 
     _screenOpacityAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _screenAnimationController, curve: Curves.easeOut),
+      CurvedAnimation(
+        parent: _screenAnimationController,
+        curve: Curves.easeOut,
+      ),
     );
 
-    _screenSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _screenAnimationController, curve: Curves.easeOut),
-    );
+    _screenSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _screenAnimationController,
+            curve: Curves.easeOut,
+          ),
+        );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<MilestoneProvider>(context, listen: false).loadTasks();
@@ -67,29 +71,39 @@ class _MilestonePageState extends State<MilestonePage>
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           RichText(
                             text: const TextSpan(
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-                              children: [
-                                TextSpan(text: "BestThings"),
-                                TextSpan(text: "Free", style: TextStyle(color: Colors.orange)),
-                              ],
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                              children: [TextSpan(text: "Giftardo")],
                             ),
                           ),
                           Row(
                             children: [
-                              const Icon(Icons.monetization_on, color: Colors.orange),
+                              const Icon(
+                                Icons.monetization_on,
+                                color: Colors.orange,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 "₹ ${walletProvider.walletAmount}",
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -99,20 +113,33 @@ class _MilestonePageState extends State<MilestonePage>
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const LeaderboardPage()),
+                            MaterialPageRoute(
+                              builder: (context) => const LeaderboardPage(),
+                            ),
                           );
                         },
-                        icon: const Icon(Icons.trending_up, color: Colors.white),
-                        label: const Text("View Leaderboard", style: TextStyle(color: Colors.white)),
+                        icon: const Icon(
+                          Icons.trending_up,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          "View Leaderboard",
+                          style: TextStyle(color: Colors.white),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -121,11 +148,20 @@ class _MilestonePageState extends State<MilestonePage>
                       ),
                       child: Column(
                         children: [
-                          const Text("Progress", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                          const Text(
+                            "Progress",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           // ✅ Animated progress bar
                           TweenAnimationBuilder<double>(
-                            tween: Tween<double>(begin: 0, end: milestoneProvider.progress),
+                            tween: Tween<double>(
+                              begin: 0,
+                              end: milestoneProvider.progress,
+                            ),
                             duration: const Duration(milliseconds: 500),
                             builder: (context, value, child) {
                               return ClipRRect(
@@ -134,11 +170,14 @@ class _MilestonePageState extends State<MilestonePage>
                                   minHeight: 10,
                                   value: value,
                                   backgroundColor: Colors.grey[200],
-                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.orange),
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                        Colors.orange,
+                                      ),
                                 ),
                               );
                             },
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -151,7 +190,9 @@ class _MilestonePageState extends State<MilestonePage>
                               itemBuilder: (context, index) {
                                 return _AnimatedTaskItem(
                                   task: milestoneProvider.tasks[index],
-                                  delay: Duration(milliseconds: 100 * index), // Staggered
+                                  delay: Duration(
+                                    milliseconds: 100 * index,
+                                  ), // Staggered
                                 );
                               },
                             ),
@@ -265,16 +306,15 @@ class _AnimatedTaskItemState extends State<_AnimatedTaskItem>
       vsync: this,
     );
 
-    _opacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _opacity = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _offset = Tween<Offset>(
       begin: const Offset(-0.2, 0),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     Future.delayed(widget.delay, () {
       if (mounted) _controller.forward();
@@ -310,11 +350,17 @@ class _AnimatedTaskItemState extends State<_AnimatedTaskItem>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.orange, width: 2),
-                  color: widget.task["completed"] ? Colors.orange : Colors.transparent,
+                  color: widget.task["completed"]
+                      ? Colors.orange
+                      : Colors.transparent,
                 ),
                 child: widget.task["completed"]
                     ? const Icon(Icons.check, color: Colors.white, size: 20)
-                    : const Icon(Icons.star_border, color: Colors.orange, size: 20),
+                    : const Icon(
+                        Icons.star_border,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -323,11 +369,17 @@ class _AnimatedTaskItemState extends State<_AnimatedTaskItem>
                   children: [
                     Text(
                       widget.task["title"],
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                     Text(
                       widget.task["subtitle"],
-                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black87,
+                      ),
                     ),
                     Text(
                       "Earn ${widget.task["points"]} points",

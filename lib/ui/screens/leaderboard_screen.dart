@@ -1,3 +1,5 @@
+// lib/pages/leaderboard_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,8 +16,9 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  List<Map<String, dynamic>> _leaders = [];
-  int _walletAmount = 250; // fallback
+  List<Map<String, dynamic>> _topLeaders = [];
+  Map<String, dynamic>? _currentUserData;
+  int _currentUserRank = 0;
   bool _loading = true;
 
   @override
@@ -26,84 +29,84 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
 
   Future<void> _loadData() async {
     try {
-      // 1. Fetch wallet (points) for current user
       final user = _auth.currentUser;
-      if (user != null) {
-        final userDoc = await _firestore.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-          setState(() {
-            _walletAmount = userDoc.data()?['points'] ?? 250;
-          });
-        }
+      if (user == null) {
+        setState(() {
+          _loading = false;
+        });
+        return;
       }
 
-      // 2. Fetch leaderboard
-      final leaderboardSnapshot = await _firestore
-          .collection('leaderboard')
+      // Fetch current user data
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      if (!userDoc.exists) {
+        setState(() {
+          _loading = false;
+        });
+        return;
+      }
+
+      final currentUserPoints = userDoc.data()?['points'] ?? 0;
+      _currentUserData = {
+        "uid": user.uid,
+        "name": userDoc.data()?['name'] ?? "You",
+        "points": currentUserPoints,
+        "avatar":
+            userDoc.data()?['avatar'] ?? "https://via.placeholder.com/150",
+      };
+
+      // Fetch top 10 users by points
+      final snapshot = await _firestore
+          .collection('users')
           .orderBy('points', descending: true)
           .limit(10)
           .get();
 
       final List<Map<String, dynamic>> leaders = [];
-      for (var doc in leaderboardSnapshot.docs) {
+      for (var doc in snapshot.docs) {
         final data = doc.data();
-        final userId = data['user_id'];
-
-        // Fetch user name
-        final userDoc = await _firestore.collection('users').doc(userId).get();
-        final name = userDoc.exists ? userDoc.data() != null ? userDoc.data()!['name'] ?? "User" : "User" : "User";
-
         leaders.add({
-          "rank": "#${leaders.length + 1}",
-          "name": name,
+          "uid": doc.id,
+          "name": data['name'] ?? "User",
           "points": data['points'] ?? 0,
-          "avatar": "https://via.placeholder.com/150", // Replace later with real avatar
-          "trend": "up", // Simplified; enhance with history if needed
-          "isCurrentUser": user?.uid == userId,
+          "avatar": data['avatar'] ?? "https://via.placeholder.com/150",
+          "isCurrentUser": doc.id == user.uid,
         });
       }
 
-      // 3. Add dummy data if less than 4 users (to preserve UI)
-      final dummyAvatars = [
-        "https://i.imgur.com/9KZuFfT.png",
-        "https://i.imgur.com/LpQ7vLd.png",
-        "https://i.imgur.com/YeWcVYq.png",
-        "https://i.imgur.com/9KZuFfT.png",
-      ];
-      final dummyNames = ["Jack Nicklson", "Joe Addamson", "Alley Sholay", "Rolex Roar"];
-      final dummyPoints = [25006, 29096, 20753, 19053];
+      // Determine current user's rank
+      bool userInTop10 = false;
+      for (int i = 0; i < leaders.length; i++) {
+        if (leaders[i]["uid"] == user.uid) {
+          _currentUserRank = i + 1;
+          userInTop10 = true;
+          break;
+        }
+      }
 
-      while (leaders.length < 4) {
-        leaders.add({
-          "rank": "#${leaders.length + 1}",
-          "name": dummyNames[leaders.length % dummyNames.length],
-          "points": dummyPoints[leaders.length % dummyPoints.length],
-          "avatar": dummyAvatars[leaders.length % dummyAvatars.length],
-          "trend": leaders.length.isEven ? "up" : "down",
-          "isCurrentUser": false,
-        });
+      if (!userInTop10) {
+        // Count how many users have more points than current user
+        final countSnapshot = await _firestore
+            .collection('users')
+            .where('points', isGreaterThan: currentUserPoints)
+            .count()
+            .get();
+        _currentUserRank = (countSnapshot.count! + 1);
       }
 
       setState(() {
-        _leaders = leaders;
+        _topLeaders = leaders;
         _loading = false;
       });
     } catch (e) {
-      // On error, use full dummy data
-      _loadDummyData();
+      print("Error loading leaderboard: $e");
+      // On error, show empty state (no dummy data)
+      setState(() {
+        _topLeaders = [];
+        _currentUserData = null;
+        _loading = false;
+      });
     }
-  }
-
-  void _loadDummyData() {
-    setState(() {
-      _leaders = [
-        {"rank": "#1", "name": "Joe Addamson", "points": 29096, "avatar": "https://i.imgur.com/LpQ7vLd.png", "trend": "up", "isCurrentUser": false},
-        {"rank": "#2", "name": "Jack Nicklson", "points": 25006, "avatar": "https://i.imgur.com/9KZuFfT.png", "trend": "up", "isCurrentUser": false},
-        {"rank": "#3", "name": "Alley Sholay", "points": 20753, "avatar": "https://i.imgur.com/YeWcVYq.png", "trend": "down", "isCurrentUser": false},
-        {"rank": "#4", "name": "Rolex Roar", "points": 19053, "avatar": "https://i.imgur.com/YeWcVYq.png", "trend": "up", "isCurrentUser": false},
-      ];
-      _loading = false;
-    });
   }
 
   @override
@@ -115,8 +118,22 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         backgroundColor: Colors.white,
         title: Row(
           children: [
-            Text("BestThings", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
-            Text("Free", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.orange)),
+            Text(
+              "Giftardo",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            Text(
+              "Free",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.orange,
+              ),
+            ),
           ],
         ),
         actions: [
@@ -124,9 +141,19 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                const Icon(Icons.monetization_on, size: 20, color: Colors.orange),
+                const Icon(
+                  Icons.monetization_on,
+                  size: 20,
+                  color: Colors.orange,
+                ),
                 const SizedBox(width: 4),
-                Text("₹ $_walletAmount", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  "₹ ${_currentUserData?['points'] ?? 0}",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -143,76 +170,112 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top 3
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          _buildTopRankCard(
-                            rank: _leaders.length > 1 ? _leaders[1]["rank"] : "#2",
-                            name: _leaders.length > 1 ? _leaders[1]["name"] : "Jack Nicklson",
-                            points: _leaders.length > 1 ? _leaders[1]["points"].toString() : "25,006",
-                            avatar: _leaders.length > 1 ? _leaders[1]["avatar"] : "https://i.imgur.com/9KZuFfT.png",
-                            color: Colors.orangeAccent,
-                            heightFactor: 1.75,
-                          ),
-                          const SizedBox(width: 12),
-                          _buildTopRankCard(
-                            rank: _leaders.isNotEmpty ? _leaders[0]["rank"] : "#1",
-                            name: _leaders.isNotEmpty ? _leaders[0]["name"] : "Joe Addamson",
-                            points: _leaders.isNotEmpty ? _leaders[0]["points"].toString() : "29,096",
-                            avatar: _leaders.isNotEmpty ? _leaders[0]["avatar"] : "https://i.imgur.com/LpQ7vLd.png",
-                            color: Colors.greenAccent,
-                            heightFactor: 2.0,
-                          ),
-                          const SizedBox(width: 12),
-                          _buildTopRankCard(
-                            rank: _leaders.length > 2 ? _leaders[2]["rank"] : "#3",
-                            name: _leaders.length > 2 ? _leaders[2]["name"] : "Alley Sholay",
-                            points: _leaders.length > 2 ? _leaders[2]["points"].toString() : "20,753",
-                            avatar: _leaders.length > 2 ? _leaders[2]["avatar"] : "https://i.imgur.com/YeWcVYq.png",
-                            color: Colors.purpleAccent,
-                            heightFactor: 1.5,
-                          ),
-                        ],
+                    // Top 3 Cards
+                    if (_topLeaders.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            if (_topLeaders.length > 1)
+                              _buildTopRankCard(
+                                rank: "#2",
+                                name: _topLeaders[1]["name"],
+                                points: _topLeaders[1]["points"].toString(),
+                                avatar: _topLeaders[1]["avatar"],
+                                color: Colors.orangeAccent,
+                                heightFactor: 1.75,
+                              ),
+                            const SizedBox(width: 12),
+                            _buildTopRankCard(
+                              rank: "#1",
+                              name: _topLeaders[0]["name"],
+                              points: _topLeaders[0]["points"].toString(),
+                              avatar: _topLeaders[0]["avatar"],
+                              color: Colors.greenAccent,
+                              heightFactor: 2.0,
+                            ),
+                            const SizedBox(width: 12),
+                            if (_topLeaders.length > 2)
+                              _buildTopRankCard(
+                                rank: "#3",
+                                name: _topLeaders[2]["name"],
+                                points: _topLeaders[2]["points"].toString(),
+                                avatar: _topLeaders[2]["avatar"],
+                                color: Colors.purpleAccent,
+                                heightFactor: 1.5,
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 20),
-                    // Rest of the list
+
+                    // Rest of Top 10 (positions 4–10)
                     ...List.generate(
-                      _leaders.length > 3 ? _leaders.length - 3 : 1,
+                      _topLeaders.length > 3 ? _topLeaders.length - 3 : 0,
                       (index) {
                         final i = index + 3;
-                        final leader = i < _leaders.length
-                            ? _leaders[i]
-                            : {
-                                "rank": "#${i + 1}",
-                                "name": "User ${i + 1}",
-                                "points": 10000 - i * 500,
-                                "avatar": "https://via.placeholder.com/150",
-                                "trend": "up",
-                                "isCurrentUser": false,
-                              };
+                        final leader = _topLeaders[i];
                         return Column(
                           children: [
                             _buildRankItem(
-                              rank: leader["rank"],
+                              rank: "#${i + 1}",
                               name: leader["name"],
                               points: leader["points"].toString(),
                               avatar: leader["avatar"],
-                              trend: leader["trend"],
-                              bgColor: leader["isCurrentUser"] ? Colors.orangeAccent : Colors.white,
+                              trend: "up", // You can enhance this later
+                              bgColor: leader["isCurrentUser"]
+                                  ? Colors.orangeAccent
+                                  : Colors.white,
                               borderColor: leader["isCurrentUser"]
                                   ? const Color.fromARGB(255, 255, 145, 2)
-                                  : const Color.fromARGB(255, 0, 0, 0).withOpacity(0.2),
+                                  : const Color.fromARGB(
+                                      255,
+                                      0,
+                                      0,
+                                      0,
+                                    ).withOpacity(0.2),
                             ),
                             const SizedBox(height: 10),
                           ],
                         );
                       },
                     ),
+
+                    // Show current user if not in top 10
+                    if (_currentUserData != null &&
+                        !_topLeaders.any(
+                          (u) => u["uid"] == _currentUserData!["uid"],
+                        ))
+                      Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          const Text(
+                            "Your Position",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          _buildRankItem(
+                            rank: "#$_currentUserRank",
+                            name: _currentUserData!["name"],
+                            points: _currentUserData!["points"].toString(),
+                            avatar: _currentUserData!["avatar"],
+                            trend: "up",
+                            bgColor: Colors.orangeAccent,
+                            borderColor: const Color.fromARGB(255, 255, 145, 2),
+                          ),
+                        ],
+                      ),
+
+                    // Empty state
+                    if (!_loading && _topLeaders.isEmpty)
+                      const Center(
+                        child: Text("No leaderboard data available."),
+                      ),
                   ],
                 ),
               ),
@@ -252,7 +315,11 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
           ),
         ),
         const SizedBox(height: 4),
@@ -285,7 +352,11 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
           child: Center(
             child: Text(
               rank,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
         ),
@@ -311,7 +382,14 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Text(rank, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
+          Text(
+            rank,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
           const SizedBox(width: 12),
           Container(
             width: 48,
@@ -330,15 +408,28 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.deepPurple,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text("₹ $points", style: const TextStyle(fontSize: 10, color: Colors.white)),
+                  child: Text(
+                    "₹ $points",
+                    style: const TextStyle(fontSize: 10, color: Colors.white),
+                  ),
                 ),
               ],
             ),
