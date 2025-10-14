@@ -51,62 +51,123 @@ class AuthService {
 
   // Finalize signup only after OTP is verified
   Future<String> completeSignupAfterOtp({
-    required String email,
-    required String password,
-    required String name,
-    required String phone,
-    int? age,
-    String? gender,
-    String? location,
-    String? verificationId,
-    String? smsCode,
-    PhoneAuthCredential? autoCredential,
-  }) async {
-    try {
-      // 1) Create the email/password account
-      final emailCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+  required String email,
+  required String password,
+  required String name,
+  required String phone,
+  int? age,
+  String? gender,
+  String? location,
+  String? verificationId,
+  String? smsCode,
+  PhoneAuthCredential? autoCredential,
+  String? referralCode, // 👈 ADD THIS
+}) async {
+  try {
+    // 1) Create the email/password account
+    final emailCredential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    final user = emailCredential.user;
+    if (user == null) throw Exception('Failed to create user');
+
+    // 2) Build phone credential
+    final PhoneAuthCredential phoneCredential = autoCredential ?? PhoneAuthProvider.credential(
+      verificationId: verificationId!,
+      smsCode: smsCode!,
+    );
+
+    // 3) Link phone to this user
+    await user.linkWithCredential(phoneCredential);
+
+    // 4) Create Firestore user doc ONLY AFTER phone is linked
+    await UserService().createUser(
+      uid: user.uid,
+      email: email,
+      name: name,
+      phone: phone,
+      age: age,
+      gender: gender,
+      location: location,
+    );
+
+    // 👇 NEW: Process referral AFTER user is created
+    if (referralCode != null && referralCode.trim().isNotEmpty) {
+      await _processReferral(
+        newUserUid: user.uid,
+        referralCode: referralCode.trim(),
       );
-      final user = emailCredential.user;
-      if (user == null) throw Exception('Failed to create user');
+    }
 
-      // 2) Build phone credential
-      final PhoneAuthCredential phoneCredential = autoCredential ?? PhoneAuthProvider.credential(
-        verificationId: verificationId!,
-        smsCode: smsCode!,
-      );
-
-      // 3) Link phone to this user
-      await user.linkWithCredential(phoneCredential);
-
-      // 4) Create Firestore user doc ONLY AFTER phone is linked
-      await UserService().createUser(
-        uid: user.uid,
-        email: email,
-        name: name,
-        phone: phone,
-        age: age,
-        gender: gender,
-        location: location,
-      );
-
-      return user.uid;
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        throw Exception('Email already in use');
-      } else if (e.code == 'weak-password') {
-        throw Exception('Password is too weak');
-      } else if (e.code == 'credential-already-in-use' || e.code == 'provider-already-linked') {
-        throw Exception('Phone number already linked to another account');
-      } else if (e.code == 'invalid-verification-code') {
-        throw Exception('Invalid OTP');
-      } else {
-        throw Exception(e.message ?? 'Signup failed');
-      }
+    return user.uid;
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'email-already-in-use') {
+      throw Exception('Email already in use');
+    } else if (e.code == 'weak-password') {
+      throw Exception('Password is too weak');
+    } else if (e.code == 'credential-already-in-use' || e.code == 'provider-already-linked') {
+      throw Exception('Phone number already linked to another account');
+    } else if (e.code == 'invalid-verification-code') {
+      throw Exception('Invalid OTP');
+    } else {
+      throw Exception(e.message ?? 'Signup failed');
     }
   }
+}
+  Future<void> _processReferral({
+  required String newUserUid,
+  required String referralCode,
+}) async {
+  try {
+    // Find referrer by referralCode (case-insensitive)
+    final referrerSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('referralCode', isEqualTo: referralCode.toUpperCase())
+        .limit(1)
+        .get();
 
+    if (referrerSnapshot.docs.isEmpty) {
+      // Invalid code — silently ignore (optional: log)
+      return;
+    }
+
+    final referrerDoc = referrerSnapshot.docs.first;
+    final referrerUid = referrerDoc.id;
+
+    // Prevent self-referral
+    if (referrerUid == newUserUid) return;
+
+    // 1. Add 150 points to referrer
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(referrerUid)
+        .update({
+      'points': FieldValue.increment(150),
+    });
+
+    // 2. Add 100 points to new user
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(newUserUid)
+        .update({
+      'points': FieldValue.increment(100),
+    });
+
+    // 3. Log in referrals collection (with status: "pending" as per your screenshot)
+    await FirebaseFirestore.instance.collection('referrals').add({
+      'user_id': referrerUid,
+      'referred_user_id': newUserUid,
+      'referral_code': referralCode.toUpperCase(),
+      'status': 'pending', // 👈 AS PER YOUR SCREENSHOT
+      'created_at': FieldValue.serverTimestamp(),
+    });
+
+  } catch (e) {
+    // Log error but don't fail signup
+    print("Referral processing error: $e");
+  }
+}
   // Existing email/password signup
   Future<String?> signUpAndLinkPhone({
     required String email,

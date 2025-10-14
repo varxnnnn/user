@@ -8,6 +8,14 @@ class WalletProvider with ChangeNotifier {
 
   int get walletAmount => _walletAmount;
 
+  WalletProvider() {
+    fetchWalletAmount();
+    // Optionally, listen to user changes and refetch
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      fetchWalletAmount();
+    });
+  }
+
   // Fetch without loader — update silently
   Future<void> fetchWalletAmount() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -32,6 +40,8 @@ class WalletProvider with ChangeNotifier {
       // print("Failed to fetch wallet: $e");
     }
   }
+
+  // (removed duplicate refreshFromServer)
 
   // Optional: Force-refresh from server (e.g., after earning points)
   Future<void> refreshFromServer() async {
