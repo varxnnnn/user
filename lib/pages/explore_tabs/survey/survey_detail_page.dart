@@ -44,6 +44,37 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
   void initState() {
     super.initState();
     _loadSurveyQuestions();
+    _loadRewardMeta();
+  }
+
+  Future<void> _loadRewardMeta() async {
+    try {
+      final activityDoc = await FirebaseFirestore.instance
+          .collection('sponsor_activities')
+          .doc(widget.activityId)
+          .get();
+
+      if (activityDoc.exists) {
+        final data = activityDoc.data()!;
+        final rewardAllocation = data['reward_allocation'] as Map<String, dynamic>?;
+        final rewardId = rewardAllocation?['reward_id'] as String?;
+        if (rewardId != null) {
+          final rdoc = await FirebaseFirestore.instance
+              .collection('sponsor_rewards')
+              .doc(rewardId)
+              .get();
+          if (rdoc.exists) {
+            final rdata = rdoc.data()!;
+            setState(() {
+              _rewardTitle = rdata['title'] as String?;
+              _rewardDescription = rdata['description'] as String?;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading reward meta: $e');
+    }
   }
 
   Future<void> _loadSurveyQuestions() async {
@@ -249,19 +280,72 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.title), backgroundColor: Colors.orange),
-      body: _loadingQuestions
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: _questions.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
-        itemBuilder: (_, index) => Card(
-          margin: EdgeInsets.zero,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: _buildQuestion(index),
-          ),
-        ),
+      body: Stack(
+        children: [
+          _loadingQuestions
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _questions.length + 1,
+                  itemBuilder: (_, index) {
+                    if (index == 0) {
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 24,
+                                backgroundColor: Colors.orange,
+                                child: Text(
+                                  widget.sponsorName.isNotEmpty ? widget.sponsorName[0].toUpperCase() : 'S',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(widget.sponsorName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    if (_rewardTitle != null) ...[
+                                      Text(_rewardTitle!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                      if (_rewardDescription != null)
+                                        Text(_rewardDescription!, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                                    ] else ...[
+                                      Text("Reward: ${_actualRewardValue > 0 ? '$_actualRewardValue points' : '${widget.pointsAwarded} points'}"),
+                                    ],
+                                    Text(widget.title, style: const TextStyle(fontSize: 16)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    return Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: _buildQuestion(index - 1),
+                      ),
+                    );
+                  },
+                ),
+          if (_isSubmitting)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.45),
+                child: const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+              ),
+            ),
+        ],
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16),

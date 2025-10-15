@@ -1,8 +1,10 @@
 // lib/pages/leaderboard_page.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // 👈 NEW
 import '../components/loading_components.dart';
 
 class LeaderboardPage extends StatefulWidget {
@@ -20,6 +22,51 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
   Map<String, dynamic>? _currentUserData;
   int _currentUserRank = 0;
   bool _loading = true;
+
+  // 👇 Helper to build Firebase Storage image URL
+  String _getProfileImageUrl(String userId) {
+    final path = 'profiles/$userId.jpg';
+    final encodedPath = Uri.encodeComponent(path); // 👈 Correct encoding
+    return 'https://firebasestorage.googleapis.com/v0/b/giftardo-43381.firebasestorage.app/o/$encodedPath?alt=media'; // 👈 No extra spaces!
+  }
+
+  // 👇 Build avatar with caching and fallback
+  Widget _buildCachedAvatar(String userId, String name) {
+    final imageUrl = _getProfileImageUrl(userId);
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    return ClipOval(
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        width: 60,
+        height: 60,
+        placeholder: (context, url) => _buildInitials(initial, 60),
+        errorWidget: (context, url, error) => _buildInitials(initial, 60),
+      ),
+    );
+  }
+
+  Widget _buildInitials(String initial, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.orange,
+        border: Border.all(color: Colors.grey[300]!, width: 2),
+      ),
+      child: Center(
+        child: Text(
+          initial,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: size * 0.4,
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -51,8 +98,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         "uid": user.uid,
         "name": userDoc.data()?['name'] ?? "You",
         "points": currentUserPoints,
-        "avatar":
-            userDoc.data()?['avatar'] ?? "https://via.placeholder.com/150",
+        // 👇 No longer uses 'avatar' field
       };
 
       // Fetch top 10 users by points
@@ -69,7 +115,6 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
           "uid": doc.id,
           "name": data['name'] ?? "User",
           "points": data['points'] ?? 0,
-          "avatar": data['avatar'] ?? "https://via.placeholder.com/150",
           "isCurrentUser": doc.id == user.uid,
         });
       }
@@ -85,7 +130,6 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       }
 
       if (!userInTop10) {
-        // Count how many users have more points than current user
         final countSnapshot = await _firestore
             .collection('users')
             .where('points', isGreaterThan: currentUserPoints)
@@ -99,8 +143,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         _loading = false;
       });
     } catch (e) {
-      print("Error loading leaderboard: $e");
-      // On error, show empty state (no dummy data)
+      if (kDebugMode) print("Error loading leaderboard: $e");
       setState(() {
         _topLeaders = [];
         _currentUserData = null;
@@ -161,125 +204,124 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       ),
       body: _loading
           ? LoadingComponents.leaderboardScreenLoading(
-              MediaQuery.of(context).size.width,
-              MediaQuery.of(context).size.height,
-            )
+        MediaQuery.of(context).size.width,
+        MediaQuery.of(context).size.height,
+      )
           : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Top 3 Cards
-                    if (_topLeaders.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            if (_topLeaders.length > 1)
-                              _buildTopRankCard(
-                                rank: "#2",
-                                name: _topLeaders[1]["name"],
-                                points: _topLeaders[1]["points"].toString(),
-                                avatar: _topLeaders[1]["avatar"],
-                                color: Colors.orangeAccent,
-                                heightFactor: 1.75,
-                              ),
-                            const SizedBox(width: 12),
-                            _buildTopRankCard(
-                              rank: "#1",
-                              name: _topLeaders[0]["name"],
-                              points: _topLeaders[0]["points"].toString(),
-                              avatar: _topLeaders[0]["avatar"],
-                              color: Colors.greenAccent,
-                              heightFactor: 2.0,
-                            ),
-                            const SizedBox(width: 12),
-                            if (_topLeaders.length > 2)
-                              _buildTopRankCard(
-                                rank: "#3",
-                                name: _topLeaders[2]["name"],
-                                points: _topLeaders[2]["points"].toString(),
-                                avatar: _topLeaders[2]["avatar"],
-                                color: Colors.purpleAccent,
-                                heightFactor: 1.5,
-                              ),
-                          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top 3 Cards
+              if (_topLeaders.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (_topLeaders.length > 1)
+                        _buildTopRankCard(
+                          rank: "#2",
+                          name: _topLeaders[1]["name"],
+                          points: _topLeaders[1]["points"].toString(),
+                          userId: _topLeaders[1]["uid"],
+                          color: Colors.orangeAccent,
+                          heightFactor: 1.75,
                         ),
+                      const SizedBox(width: 12),
+                      _buildTopRankCard(
+                        rank: "#1",
+                        name: _topLeaders[0]["name"],
+                        points: _topLeaders[0]["points"].toString(),
+                        userId: _topLeaders[0]["uid"],
+                        color: Colors.greenAccent,
+                        heightFactor: 2.0,
                       ),
+                      const SizedBox(width: 12),
+                      if (_topLeaders.length > 2)
+                        _buildTopRankCard(
+                          rank: "#3",
+                          name: _topLeaders[2]["name"],
+                          points: _topLeaders[2]["points"].toString(),
+                          userId: _topLeaders[2]["uid"],
+                          color: Colors.purpleAccent,
+                          heightFactor: 1.5,
+                        ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 20),
+
+              // Rest of Top 10 (positions 4–10)
+              ...List.generate(
+                _topLeaders.length > 3 ? _topLeaders.length - 3 : 0,
+                    (index) {
+                  final i = index + 3;
+                  final leader = _topLeaders[i];
+                  return Column(
+                    children: [
+                      _buildRankItem(
+                        rank: "#${i + 1}",
+                        name: leader["name"],
+                        points: leader["points"].toString(),
+                        userId: leader["uid"],
+                        trend: "up",
+                        bgColor: leader["isCurrentUser"]
+                            ? Colors.orangeAccent
+                            : Colors.white,
+                        borderColor: leader["isCurrentUser"]
+                            ? const Color.fromARGB(255, 255, 145, 2)
+                            : const Color.fromARGB(
+                          255,
+                          0,
+                          0,
+                          0,
+                        ).withOpacity(0.2),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  );
+                },
+              ),
+
+              // Show current user if not in top 10
+              if (_currentUserData != null &&
+                  !_topLeaders.any(
+                        (u) => u["uid"] == _currentUserData!["uid"],
+                  ))
+                Column(
+                  children: [
                     const SizedBox(height: 20),
-
-                    // Rest of Top 10 (positions 4–10)
-                    ...List.generate(
-                      _topLeaders.length > 3 ? _topLeaders.length - 3 : 0,
-                      (index) {
-                        final i = index + 3;
-                        final leader = _topLeaders[i];
-                        return Column(
-                          children: [
-                            _buildRankItem(
-                              rank: "#${i + 1}",
-                              name: leader["name"],
-                              points: leader["points"].toString(),
-                              avatar: leader["avatar"],
-                              trend: "up", // You can enhance this later
-                              bgColor: leader["isCurrentUser"]
-                                  ? Colors.orangeAccent
-                                  : Colors.white,
-                              borderColor: leader["isCurrentUser"]
-                                  ? const Color.fromARGB(255, 255, 145, 2)
-                                  : const Color.fromARGB(
-                                      255,
-                                      0,
-                                      0,
-                                      0,
-                                    ).withOpacity(0.2),
-                            ),
-                            const SizedBox(height: 10),
-                          ],
-                        );
-                      },
+                    const Text(
+                      "Your Position",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-
-                    // Show current user if not in top 10
-                    if (_currentUserData != null &&
-                        !_topLeaders.any(
-                          (u) => u["uid"] == _currentUserData!["uid"],
-                        ))
-                      Column(
-                        children: [
-                          const SizedBox(height: 20),
-                          const Text(
-                            "Your Position",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          _buildRankItem(
-                            rank: "#$_currentUserRank",
-                            name: _currentUserData!["name"],
-                            points: _currentUserData!["points"].toString(),
-                            avatar: _currentUserData!["avatar"],
-                            trend: "up",
-                            bgColor: Colors.orangeAccent,
-                            borderColor: const Color.fromARGB(255, 255, 145, 2),
-                          ),
-                        ],
-                      ),
-
-                    // Empty state
-                    if (!_loading && _topLeaders.isEmpty)
-                      const Center(
-                        child: Text("No leaderboard data available."),
-                      ),
+                    const SizedBox(height: 10),
+                    _buildRankItem(
+                      rank: "#$_currentUserRank",
+                      name: _currentUserData!["name"],
+                      points: _currentUserData!["points"].toString(),
+                      userId: _currentUserData!["uid"],
+                      trend: "up",
+                      bgColor: Colors.orangeAccent,
+                      borderColor: const Color.fromARGB(255, 255, 145, 2),
+                    ),
                   ],
                 ),
-              ),
-            ),
+
+              if (!_loading && _topLeaders.isEmpty)
+                const Center(
+                  child: Text("No leaderboard data available."),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -287,7 +329,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
     required String rank,
     required String name,
     required String points,
-    required String avatar,
+    required String userId,
     required Color color,
     double heightFactor = 1.0,
   }) {
@@ -295,18 +337,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            image: DecorationImage(
-              image: NetworkImage(avatar.trim()),
-              fit: BoxFit.cover,
-            ),
-            border: Border.all(color: Colors.grey[300]!, width: 2),
-          ),
-        ),
+        _buildCachedAvatar(userId, name),
         const SizedBox(height: 8),
         SizedBox(
           width: 90,
@@ -368,7 +399,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
     required String rank,
     required String name,
     required String points,
-    required String avatar,
+    required String userId,
     required String trend,
     required Color bgColor,
     required Color borderColor,
@@ -391,18 +422,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
             ),
           ),
           const SizedBox(width: 12),
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                image: NetworkImage(avatar.trim()),
-                fit: BoxFit.cover,
-              ),
-              border: Border.all(color: Colors.grey[300]!, width: 2),
-            ),
-          ),
+          _buildCachedAvatar(userId, name),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

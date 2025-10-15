@@ -1,4 +1,5 @@
 // lib/pages/profile_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,7 @@ import 'package:giftardo/providers/profile_provider.dart';
 import 'package:giftardo/providers/rewards_display_provider.dart';
 import '../components/loading_components.dart';
 import '../components/rewards_display_widget.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // 👈 NEW
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -28,7 +30,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _logout(BuildContext context) async {
-    // TODO: Implement logout logic in ProfileProvider if needed
     Navigator.of(context).pushReplacementNamed('/login');
   }
 
@@ -44,10 +45,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final code = provider.userData?['referralCode'];
     if (code != null) {
       Clipboard.setData(ClipboardData(text: code.toString()));
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Referral code copied!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Referral code copied!")),
+      );
     }
+  }
+
+  // 👇 Helper to get profile image URL
+  String? _getProfileImageUrl(String? userId) {
+    if (userId == null) return null;
+
+    // Use Uri.encodeComponent instead of Uri.encodeFull
+    final path = 'profiles/$userId.jpg';
+    final encodedPath = Uri.encodeComponent(path);
+
+    return 'https://firebasestorage.googleapis.com/v0/b/giftardo-43381.firebasestorage.app/o/$encodedPath?alt=media';
   }
 
   @override
@@ -65,17 +77,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             );
           }
 
-          // ✅ Only use fields from your schema
           final name = provider.userData?['name'] ?? "User Name";
           final email = provider.userData?['email'] ?? "email@example.com";
           final points = provider.userData?['points'] ?? 0;
           final referralCode = provider.userData?['referralCode'] ?? "XXXX";
-          final totalRewards =
-              provider.userData?['totalRewards'] ??
-              0; // ✅ From reward_redemptions_report
-
-          // Level based on points
+          final totalRewards = provider.userData?['totalRewards'] ?? 0;
           final currentLevel = (points ~/ 1000) + 1;
+
+          // 👇 Get image URL
+          final profileImageUrl = _getProfileImageUrl(provider.userId);
 
           return SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
@@ -117,19 +127,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   child: Row(
                     children: [
+                      // 👇 Replaced CircleAvatar content with CachedNetworkImage
                       CircleAvatar(
                         radius: screenWidth * 0.1,
                         backgroundColor: Colors.orange,
-                        child: Text(
-                          name.length >= 2
-                              ? name.substring(0, 2).toUpperCase()
-                              : name.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
+                        child: profileImageUrl != null
+                            ? ClipOval(
+                          child: CachedNetworkImage(
+                            imageUrl: profileImageUrl,
+                            fit: BoxFit.cover,
+                            width: screenWidth * 0.2,
+                            height: screenWidth * 0.2,
+                            placeholder: (context, url) => const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            errorWidget: (context, url, error) =>
+                                _buildInitialsAvatar(name),
                           ),
-                        ),
+                        )
+                            : _buildInitialsAvatar(name),
                       ),
                       SizedBox(width: screenWidth * 0.03),
                       Expanded(
@@ -181,8 +199,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       screenWidth: screenWidth,
                       screenHeight: screenHeight,
                       icon: Icons.card_giftcard,
-                      label: "Total Rewards Earned", // ✅ Updated
-                      value: "$totalRewards", // ✅ Real value
+                      label: "Total Rewards Earned",
+                      value: "$totalRewards",
                     ),
                   ],
                 ),
@@ -202,8 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       screenHeight: screenHeight,
                       icon: Icons.star,
                       label: "Total Points",
-                      value:
-                          "${points.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match.group(1)},')}",
+                      value: "${points.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match.group(1)},')}",
                     ),
                   ],
                 ),
@@ -319,11 +336,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Row(
                             children: [
                               ElevatedButton(
-                                onPressed: () =>
-                                    provider.updateLanguage("English"),
+                                onPressed: () => provider.updateLanguage("English"),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      provider.selectedLanguage == "English"
+                                  backgroundColor: provider.selectedLanguage == "English"
                                       ? Colors.orange
                                       : Colors.grey[200],
                                   foregroundColor: Colors.white,
@@ -344,11 +359,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               SizedBox(width: screenWidth * 0.02),
                               ElevatedButton(
-                                onPressed: () =>
-                                    provider.updateLanguage("Hindi"),
+                                onPressed: () => provider.updateLanguage("Hindi"),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      provider.selectedLanguage == "Hindi"
+                                  backgroundColor: provider.selectedLanguage == "Hindi"
                                       ? Colors.orange
                                       : Colors.grey[200],
                                   foregroundColor: Colors.white,
@@ -413,6 +426,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  // 👇 Helper to build initials fallback
+  Widget _buildInitialsAvatar(String name) {
+    return Text(
+      name.length >= 2
+          ? name.substring(0, 2).toUpperCase()
+          : name.toUpperCase(),
+      style: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+        fontSize: 24,
       ),
     );
   }

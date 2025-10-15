@@ -39,6 +39,8 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   List<Map<String, dynamic>> _questions = [];
   bool _loadingQuestions = true;
   int _rewardPoints = 0;
+  String? _rewardTitle;
+  String? _rewardDescription;
 
   @override
   void initState() {
@@ -58,6 +60,24 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
         final data = activityDoc.data()!;
         setState(() {
           _rewardPoints = data['cost_points'] ?? 0;
+          // If reward allocation present, try to show reward title/description
+          final rewardAlloc = data['reward_allocation'] as Map<String, dynamic>?;
+          if (rewardAlloc != null && rewardAlloc['reward_id'] != null) {
+            // fetch reward meta
+            FirebaseFirestore.instance
+                .collection('sponsor_rewards')
+                .doc(rewardAlloc['reward_id'] as String)
+                .get()
+                .then((rdoc) {
+              if (rdoc.exists) {
+                final rdata = rdoc.data()!;
+                setState(() {
+                  _rewardTitle = rdata['title'] as String?;
+                  _rewardDescription = rdata['description'] as String?;
+                });
+              }
+            }).catchError((_) {});
+          }
         });
       }
     } catch (e) {
@@ -311,9 +331,21 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                 widget.sponsorName,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text(
-                "Reward: ${_rewardPoints > 0 ? '$_rewardPoints points' : 'No reward'}",
-              ),
+              if (_rewardTitle != null) ...[
+                Text(
+                  _rewardTitle!,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                if (_rewardDescription != null)
+                  Text(
+                    _rewardDescription!,
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+              ] else ...[
+                Text(
+                  "Reward: ${_rewardPoints > 0 ? '$_rewardPoints points' : 'No reward'}",
+                ),
+              ],
               Text(widget.title, style: const TextStyle(fontSize: 16)),
             ],
           ),

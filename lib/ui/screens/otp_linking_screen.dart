@@ -1,6 +1,7 @@
 // lib/ui/screens/otp_linking_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:giftardo/providers/auth_provider.dart';
 import 'package:giftardo/main_screen.dart';
@@ -20,12 +21,30 @@ class OtpLinkingScreen extends StatefulWidget {
 }
 
 class _OtpLinkingScreenState extends State<OtpLinkingScreen> {
-  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
+  late final List<TextEditingController> _controllers;
+  late final List<FocusNode> _focusNodes;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = List.generate(6, (_) => TextEditingController());
+    _focusNodes = List.generate(6, (_) => FocusNode());
+
+    // Auto-focus first OTP field after layout is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_focusNodes.isNotEmpty) {
+        FocusScope.of(context).requestFocus(_focusNodes[0]);
+      }
+    });
+  }
 
   @override
   void dispose() {
     for (var controller in _controllers) {
       controller.dispose();
+    }
+    for (var node in _focusNodes) {
+      node.dispose();
     }
     super.dispose();
   }
@@ -65,7 +84,7 @@ class _OtpLinkingScreenState extends State<OtpLinkingScreen> {
                 ),
               ),
               Text(
-                'Enter the code sent to $widget.phoneNumber',
+                'Enter the code sent to ${widget.phoneNumber}',
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
@@ -80,12 +99,17 @@ class _OtpLinkingScreenState extends State<OtpLinkingScreen> {
                     height: 50,
                     child: TextField(
                       controller: _controllers[index],
+                      focusNode: _focusNodes[index],
                       keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
                       textAlign: TextAlign.center,
                       maxLength: 1,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.grey[100],
+                        counterText: '', // 👈 Hides the "1/1" counter
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide.none,
@@ -93,7 +117,12 @@ class _OtpLinkingScreenState extends State<OtpLinkingScreen> {
                       ),
                       onChanged: (value) {
                         if (value.length == 1 && index < 5) {
-                          FocusScope.of(context).nextFocus();
+                          FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
+                        }
+                      },
+                      onSubmitted: (_) {
+                        if (index == 5) {
+                          // Optionally trigger verification on last box submit
                         }
                       },
                     ),
@@ -121,7 +150,9 @@ class _OtpLinkingScreenState extends State<OtpLinkingScreen> {
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(authProvider.error ?? 'Invalid OTP')),
+                        SnackBar(
+                          content: Text(authProvider.error ?? 'Invalid OTP'),
+                        ),
                       );
                     }
                   },

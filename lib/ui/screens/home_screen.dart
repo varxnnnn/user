@@ -1,4 +1,5 @@
 // lib/pages/home_page.dart
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,8 @@ import 'package:giftardo/providers/wallet_provider.dart';
 import 'package:giftardo/providers/milestone_provider.dart';
 import '../components/loading_components.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // 👈 NEW
+import 'package:cached_network_image/cached_network_image.dart'; // 👈 NEW
 import 'all_activities_screen.dart';
 
 class HomePage extends StatefulWidget {
@@ -21,9 +24,19 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> _vouchers = [];
   bool _vouchersLoading = true;
 
-  // 👇 NEW: For top winners
+  // 👇 Store winner user IDs, not avatar URLs
   List<Map<String, dynamic>> _topWinners = [];
   bool _winnersLoading = true;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance; // 👈 NEW
+
+  String? _getProfileImageUrl(String? userId) {
+    if (userId == null) return null;
+    final path = 'profiles/$userId.jpg';
+    // Encode the entire path so '/' becomes '%2F'
+    final encodedPath = Uri.encodeComponent(path);
+    return 'https://firebasestorage.googleapis.com/v0/b/giftardo-43381.firebasestorage.app/o/$encodedPath?alt=media';
+  }
 
   Future<void> fetchVouchers() async {
     setState(() {
@@ -36,19 +49,19 @@ class _HomePageState extends State<HomePage> {
       _vouchers = snapshot.docs
           .where((doc) => (doc.data()['metadata']?['voucher']) != null)
           .map((doc) {
-            final data = doc.data();
-            final voucher = data['metadata']['voucher'];
-            return {
-              "title": data['title'] ?? '',
-              "description": data['description'] ?? '',
-              "value": voucher['value'] ?? 0,
-              "currency": voucher['currency'] ?? '',
-              "available_quantity": data['available_quantity'] ?? 0,
-              "status": data['status'] ?? '',
-              "sponsor_id": data['sponsor_id'] ?? '',
-              "color": Colors.orange,
-            };
-          })
+        final data = doc.data();
+        final voucher = data['metadata']['voucher'];
+        return {
+          "title": data['title'] ?? '',
+          "description": data['description'] ?? '',
+          "value": voucher['value'] ?? 0,
+          "currency": voucher['currency'] ?? '',
+          "available_quantity": data['available_quantity'] ?? 0,
+          "status": data['status'] ?? '',
+          "sponsor_id": data['sponsor_id'] ?? '',
+          "color": Colors.orange,
+        };
+      })
           .toList();
     } catch (e) {
       _vouchers = [];
@@ -58,7 +71,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // 👇 NEW: Fetch real top 3 winners
+  // 👇 Fetch top winners by user ID (not avatar field)
   Future<void> _fetchTopWinners() async {
     try {
       final snapshot = await FirebaseFirestore.instance
@@ -66,15 +79,13 @@ class _HomePageState extends State<HomePage> {
           .orderBy('points', descending: true)
           .limit(3)
           .get();
-
       final List<Map<String, dynamic>> winners = [];
       for (var doc in snapshot.docs) {
         final data = doc.data();
         final name = data['name'] ?? 'User';
-        final avatar = data['avatar'] as String?;
-        winners.add({'name': name, 'avatar': avatar});
+        final userId = doc.id; // 👈 Use document ID as user ID
+        winners.add({'name': name, 'userId': userId});
       }
-
       setState(() {
         _topWinners = winners;
         _winnersLoading = false;
@@ -93,15 +104,11 @@ class _HomePageState extends State<HomePage> {
     fetchVouchers();
   }
 
-  final PageController _rewardController = PageController(
-    viewportFraction: 0.9,
-  );
+  final PageController _rewardController = PageController(viewportFraction: 0.9);
   int _currentRewardPage = 0;
   Timer? _timer;
 
-  final PageController _voucherController = PageController(
-    viewportFraction: 0.6,
-  );
+  final PageController _voucherController = PageController(viewportFraction: 0.6);
   int _currentVoucherPage = 0;
   Timer? _voucherTimer;
 
@@ -115,11 +122,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<WalletProvider>(context, listen: false).fetchWalletAmount();
       Provider.of<MilestoneProvider>(context, listen: false).loadTasks();
-      _fetchTopWinners(); // 👈 Fetch real top winners
+      _fetchTopWinners();
     });
 
     _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
@@ -154,16 +160,52 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  Widget _buildAvatarFromUrl(String? imageUrl, String fallbackText) {
+    if (imageUrl != null) {
+      return ClipOval(
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: BoxFit.cover,
+          width: 50,
+          height: 50,
+          placeholder: (context, url) => _buildInitials(fallbackText),
+          errorWidget: (context, url, error) => _buildInitials(fallbackText),
+        ),
+      );
+    }
+    return _buildInitials(fallbackText);
+  }
+
+  Widget _buildInitials(String name) {
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    return CircleAvatar(
+      radius: 25,
+      backgroundColor: Colors.orange,
+      child: Text(
+        initial,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final currentUser = _auth.currentUser;
+    final currentUserId = currentUser?.uid;
+    final currentUserEmail = currentUser?.email ?? "User";
+    final currentUserInitial = currentUserEmail.isNotEmpty
+        ? currentUserEmail[0].toUpperCase()
+        : 'U';
+
     return Consumer<WalletProvider>(
       builder: (context, walletProvider, child) {
         return Consumer<MilestoneProvider>(
           builder: (context, milestoneProvider, child) {
             final vouchers = _vouchers;
-
-            // 👇 REMOVED dummy winners list
-
             final rewardCards = [
               {
                 "title": "Start Earning Now",
@@ -188,17 +230,20 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Bar
+                    // Top Bar — 👇 Updated Avatar
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            const CircleAvatar(
+                            currentUserId != null
+                                ? _buildAvatarFromUrl(
+                              _getProfileImageUrl(currentUserId),
+                              currentUserInitial,
+                            )
+                                : const CircleAvatar(
                               radius: 25,
-                              backgroundImage: NetworkImage(
-                                "https://via.placeholder.com/150",
-                              ),
+                              child: Icon(Icons.person, color: Colors.white),
                             ),
                             const SizedBox(width: 10),
                             Column(
@@ -264,7 +309,6 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 20),
 
                     // Categories
@@ -309,7 +353,6 @@ class _HomePageState extends State<HomePage> {
                         },
                       ),
                     ),
-
                     const SizedBox(height: 20),
 
                     // Reward Cards
@@ -366,7 +409,6 @@ class _HomePageState extends State<HomePage> {
                         },
                       ),
                     ),
-
                     const SizedBox(height: 20),
 
                     // Earn Vouchers Section
@@ -397,180 +439,174 @@ class _HomePageState extends State<HomePage> {
                         _vouchersLoading
                             ? const Center(child: CircularProgressIndicator())
                             : SizedBox(
-                                height: 220,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: vouchers.length,
-                                  itemBuilder: (context, index) {
-                                    final voucher = vouchers[index];
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 16),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ExploreScreen(),
-                                            ),
-                                          );
-                                        },
-                                        child: Container(
-                                          width: 150,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            color: Colors.white,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.grey.withOpacity(
-                                                  0.3,
-                                                ),
-                                                spreadRadius: 2,
-                                                blurRadius: 5,
-                                              ),
-                                            ],
+                          height: 220,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: vouchers.length,
+                            itemBuilder: (context, index) {
+                              final voucher = vouchers[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 16),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ExploreScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 150,
+                                    decoration: BoxDecoration(
+                                      borderRadius:
+                                      BorderRadius.circular(12),
+                                      color: Colors.white,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(
+                                            0.3,
                                           ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Container(
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  color:
-                                                      voucher["color"] as Color,
-                                                  borderRadius:
-                                                      const BorderRadius.vertical(
-                                                        top: Radius.circular(
-                                                          12,
-                                                        ),
-                                                      ),
+                                          spreadRadius: 2,
+                                          blurRadius: 5,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          height: 100,
+                                          decoration: BoxDecoration(
+                                            color:
+                                            voucher["color"] as Color,
+                                            borderRadius:
+                                            const BorderRadius.vertical(
+                                              top: Radius.circular(
+                                                12,
+                                              ),
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Column(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment
+                                                  .center,
+                                              children: [
+                                                Icon(
+                                                  Icons.local_offer,
+                                                  color: Colors.white,
+                                                  size: 40,
                                                 ),
-                                                child: Center(
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Icon(
-                                                        Icons.local_offer,
-                                                        color: Colors.white,
-                                                        size: 40,
-                                                      ),
-                                                      const SizedBox(height: 8),
-                                                      Text(
-                                                        "${voucher["value"]} ${voucher["currency"]}",
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ],
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  "${voucher["value"]} ${voucher["currency"]}",
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight:
+                                                    FontWeight.bold,
+                                                    fontSize: 16,
                                                   ),
                                                 ),
-                                              ),
-                                              Padding(
-                                                padding: const EdgeInsets.all(
-                                                  12,
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(12),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                voucher["title"] ??
+                                                    "Untitled Voucher",
+                                                style: const TextStyle(
+                                                  fontWeight:
+                                                  FontWeight.bold,
+                                                  fontSize: 14,
+                                                  overflow: TextOverflow
+                                                      .ellipsis,
                                                 ),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      voucher["title"] ??
-                                                          "Untitled Voucher",
-                                                      style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 14,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                      maxLines: 1,
+                                                maxLines: 1,
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                children: [
+                                                  const Icon(
+                                                    Icons.inventory,
+                                                    size: 16,
+                                                    color: Colors.grey,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    "Avail: ${voucher["available_quantity"]}",
+                                                    style:
+                                                    const TextStyle(
+                                                      fontSize: 12,
+                                                      color:
+                                                      Colors.grey,
                                                     ),
-                                                    const SizedBox(height: 4),
-                                                    Row(
-                                                      children: [
-                                                        const Icon(
-                                                          Icons.inventory,
-                                                          size: 16,
-                                                          color: Colors.grey,
-                                                        ),
-                                                        const SizedBox(
-                                                          width: 4,
-                                                        ),
-                                                        Text(
-                                                          "Avail: ${voucher["available_quantity"]}",
-                                                          style:
-                                                              const TextStyle(
-                                                                fontSize: 12,
-                                                                color:
-                                                                    Colors.grey,
-                                                              ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    const SizedBox(height: 8),
-                                                    SizedBox(
-                                                      width: double.infinity,
-                                                      child: ElevatedButton(
-                                                        onPressed: () {
-                                                          Navigator.push(
-                                                            context,
-                                                            MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  VoucherDetailPage(
-                                                                    voucher:
-                                                                        voucher,
-                                                                  ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              SizedBox(
+                                                width: double.infinity,
+                                                child: ElevatedButton(
+                                                  onPressed: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            VoucherDetailPage(
+                                                              voucher:
+                                                              voucher,
                                                             ),
-                                                          );
-                                                        },
-                                                        style: ElevatedButton.styleFrom(
-                                                          backgroundColor:
-                                                              Colors.orange,
-                                                          foregroundColor:
-                                                              Colors.black,
-                                                          shape: RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  8,
-                                                                ),
-                                                          ),
-                                                          padding:
-                                                              const EdgeInsets.symmetric(
-                                                                vertical: 8,
-                                                              ),
-                                                        ),
-                                                        child: const Text(
-                                                          "Get Now",
-                                                          style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            fontSize: 14,
-                                                          ),
-                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                    Colors.orange,
+                                                    foregroundColor:
+                                                    Colors.black,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                      BorderRadius.circular(
+                                                        8,
                                                       ),
                                                     ),
-                                                  ],
+                                                    padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 8,
+                                                    ),
+                                                  ),
+                                                  child: const Text(
+                                                    "Get Now",
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                      FontWeight.bold,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                      ),
-                                    );
-                                  },
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              );
+                            },
+                          ),
+                        ),
                       ],
                     ),
-
                     const SizedBox(height: 20),
 
                     // Ongoing Tasks
@@ -608,7 +644,6 @@ class _HomePageState extends State<HomePage> {
                             children: milestoneProvider.tasks.map((task) {
                               final pointsText = "+${task['points']}";
                               final isCompleted = task['completed'] == true;
-
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: Container(
@@ -642,7 +677,7 @@ class _HomePageState extends State<HomePage> {
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               task['title'] ?? "Complete Task",
@@ -693,7 +728,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                       ],
                     ),
-
                     const SizedBox(height: 20),
 
                     // Explore Section
@@ -711,11 +745,9 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
 
-                    // 👇 REPLACED: Top Winners Today — now REAL data
-                    // Top Winners Today (with names below avatars)
+                    // Top Winners Today — 👇 Updated with real images from Storage
                     const Text(
                       "Top Winners Today",
                       style: TextStyle(
@@ -727,88 +759,45 @@ class _HomePageState extends State<HomePage> {
                     _winnersLoading
                         ? const Center(child: CircularProgressIndicator())
                         : SizedBox(
-                            height: 90, // Increased height to fit name
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: _topWinners.length,
-                              itemBuilder: (context, index) {
-                                final winner = _topWinners[index];
-                                final name = winner['name'] as String;
-                                final avatar = winner['avatar'] as String?;
+                      height: 90,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _topWinners.length,
+                        itemBuilder: (context, index) {
+                          final winner = _topWinners[index];
+                          final name = winner['name'] as String;
+                          final userId = winner['userId'] as String;
+                          final imageUrl = _getProfileImageUrl(userId);
+                          final initial = name.isNotEmpty
+                              ? name[0].toUpperCase()
+                              : '?';
 
-                                final initial = name.isNotEmpty
-                                    ? name[0].toUpperCase()
-                                    : '?';
-
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 16),
-                                  child: Column(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 25,
-                                        backgroundColor: Colors.orange,
-                                        child:
-                                            avatar != null &&
-                                                avatar.trim().isNotEmpty
-                                            ? ClipOval(
-                                                child: Image.network(
-                                                  avatar.trim(),
-                                                  fit: BoxFit.cover,
-                                                  width: 50,
-                                                  height: 50,
-                                                  errorBuilder:
-                                                      (
-                                                        context,
-                                                        error,
-                                                        stackTrace,
-                                                      ) {
-                                                        return Text(
-                                                          initial,
-                                                          style:
-                                                              const TextStyle(
-                                                                color: Colors
-                                                                    .white,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize: 16,
-                                                              ),
-                                                        );
-                                                      },
-                                                ),
-                                              )
-                                            : Text(
-                                                initial,
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      // Name below avatar
-                                      SizedBox(
-                                        width:
-                                            80, // Constrain width for consistent layout
-                                        child: Text(
-                                          name,
-                                          textAlign: TextAlign.center,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 16),
+                            child: Column(
+                              children: [
+                                _buildAvatarFromUrl(imageUrl, initial),
+                                const SizedBox(height: 4),
+                                SizedBox(
+                                  width: 80,
+                                  child: Text(
+                                    name,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black,
+                                    ),
                                   ),
-                                );
-                              },
+                                ),
+                              ],
                             ),
-                          ),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),

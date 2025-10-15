@@ -3,8 +3,31 @@ import 'package:provider/provider.dart';
 import 'package:giftardo/providers/rewards_display_provider.dart';
 import 'package:giftardo/providers/auth_provider.dart';
 
-class RewardsDisplayWidget extends StatelessWidget {
+class RewardsDisplayWidget extends StatefulWidget {
   const RewardsDisplayWidget({super.key});
+
+  @override
+  State<RewardsDisplayWidget> createState() => _RewardsDisplayWidgetState();
+}
+
+class _RewardsDisplayWidgetState extends State<RewardsDisplayWidget> {
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final rewardsProvider = Provider.of<RewardsDisplayProvider>(context, listen: false);
+      if (auth.user != null && rewardsProvider.lastLoadedUserId != auth.user!.uid) {
+        // Load once after first build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          rewardsProvider.loadUserRewards(auth.user!.uid);
+        });
+      }
+      _initialized = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,131 +35,126 @@ class RewardsDisplayWidget extends StatelessWidget {
       builder: (context, rewardsProvider, authProvider, child) {
         if (authProvider.user == null) return const SizedBox.shrink();
 
-        return FutureBuilder<void>(
-          future: rewardsProvider.loadUserRewards(authProvider.user!.uid),
-          builder: (context, snapshot) {
-            if (rewardsProvider.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        if (rewardsProvider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-            if (rewardsProvider.error != null) {
-              return Center(
-                child: Text(
-                  'Error loading rewards: ${rewardsProvider.error}',
-                  style: const TextStyle(color: Colors.red),
+        if (rewardsProvider.error != null) {
+          return Center(
+            child: Text(
+              'Error loading rewards: ${rewardsProvider.error}',
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Rewards Summary
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.orange.shade100, Colors.orange.shade50],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              );
-            }
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Rewards Summary
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.orange.shade100, Colors.orange.shade50],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.orange.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.card_giftcard, color: Colors.orange.shade700),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Rewards Summary',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange.shade700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildRewardStat(
-                            'Total Rewards',
-                            '${rewardsProvider.totalRewardsEarned}',
-                            Icons.stars,
-                            Colors.orange,
-                          ),
-                          _buildRewardStat(
-                            'Activities Completed',
-                            '${rewardsProvider.totalActivitiesCompleted}',
-                            Icons.check_circle,
-                            Colors.green,
-                          ),
-                        ],
+                      Icon(Icons.card_giftcard, color: Colors.orange.shade700),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Rewards Summary',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange.shade700,
+                        ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-
-                // Recent Rewards
-                Text(
-                  'Recent Rewards',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildRewardStat(
+                        'Total Rewards',
+                        '${rewardsProvider.totalRewardsEarned}',
+                        Icons.stars,
+                        Colors.orange,
+                      ),
+                      _buildRewardStat(
+                        'Activities Completed',
+                        '${rewardsProvider.totalActivitiesCompleted}',
+                        Icons.check_circle,
+                        Colors.green,
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 8),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
 
-                if (rewardsProvider.earnedRewards.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade200),
+            // Recent Rewards
+            Text(
+              'Recent Rewards',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            if (rewardsProvider.earnedRewards.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.card_giftcard_outlined, size: 48, color: Colors.grey.shade400),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No rewards earned yet',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
-                    child: Column(
-                      children: [
-                        Icon(Icons.card_giftcard_outlined, size: 48, color: Colors.grey.shade400),
-                        const SizedBox(height: 8),
-                        Text(
-                          'No rewards earned yet',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Complete activities to earn rewards!',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'Complete activities to earn rewards!',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                      ),
                     ),
-                  )
-                else
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: rewardsProvider.recentRewards.length,
-                    itemBuilder: (context, index) {
-                      final reward = rewardsProvider.recentRewards[index];
-                      return _buildRewardItem(reward, index);
-                    },
-                  ),
-              ],
-            );
-          },
+                  ],
+                ),
+              )
+            else
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: rewardsProvider.recentRewards.length,
+                itemBuilder: (context, index) {
+                  final reward = rewardsProvider.recentRewards[index];
+                  return _buildRewardItem(reward, index);
+                },
+              ),
+          ],
         );
       },
     );
@@ -247,4 +265,5 @@ class RewardsDisplayWidget extends StatelessWidget {
       ),
     );
   }
+
 }

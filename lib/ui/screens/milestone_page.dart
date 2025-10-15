@@ -68,136 +68,143 @@ class _MilestonePageState extends State<MilestonePage>
               opacity: _screenOpacityAnimation,
               child: SlideTransition(
                 position: _screenSlideAnimation,
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          RichText(
-                            text: const TextSpan(
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                              children: [TextSpan(text: "Giftardo")],
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.monetization_on,
-                                color: Colors.orange,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                "₹ ${walletProvider.walletAmount}",
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                child: DefaultTabController(
+                  length: 2,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            RichText(
+                              text: const TextSpan(
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
                                 ),
+                                children: [TextSpan(text: "Giftardo")],
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LeaderboardPage(),
                             ),
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.trending_up,
-                          color: Colors.white,
-                        ),
-                        label: const Text(
-                          "View Leaderboard",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.monetization_on,
+                                  color: Colors.orange,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "₹ ${walletProvider.walletAmount}",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
+
+                      // Top TabBar replacing the previous 'View Leaderboard' button
+                      Container(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange.shade300),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: const TabBar(
+                          labelColor: Colors.orange,
+                          unselectedLabelColor: Colors.black54,
+                          indicatorColor: Colors.orange,
+                          tabs: [
+                            Tab(text: "Milestones"),
+                            Tab(text: "Leaderboard"),
+                          ],
+                        ),
                       ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            "Progress",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // ✅ Animated progress bar
-                          TweenAnimationBuilder<double>(
-                            tween: Tween<double>(
-                              begin: 0,
-                              end: milestoneProvider.progress,
-                            ),
-                            duration: const Duration(milliseconds: 500),
-                            builder: (context, value, child) {
-                              return ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: LinearProgressIndicator(
-                                  minHeight: 10,
-                                  value: value,
-                                  backgroundColor: Colors.grey[200],
-                                  valueColor:
-                                      const AlwaysStoppedAnimation<Color>(
-                                        Colors.orange,
+
+                      // Tab content
+                      Expanded(
+                        child: TabBarView(
+                          children: [
+                            // First tab: existing milestone content
+                            Column(
+                              children: [
+                                const SizedBox(height: 12),
+                                Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.orange.shade300),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Text(
+                                        "Progress",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
+                                      const SizedBox(height: 8),
+                                      TweenAnimationBuilder<double>(
+                                        tween: Tween<double>(
+                                          begin: 0,
+                                          end: milestoneProvider.progress,
+                                        ),
+                                        duration: const Duration(milliseconds: 500),
+                                        builder: (context, value, child) {
+                                          return ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: LinearProgressIndicator(
+                                              minHeight: 10,
+                                              value: value,
+                                              backgroundColor: Colors.grey[200],
+                                              valueColor:
+                                                  const AlwaysStoppedAnimation<Color>(
+                                                    Colors.orange,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: milestoneProvider.isLoading
-                          ? _buildShimmerLoading()
-                          : ListView.builder(
-                              itemCount: milestoneProvider.tasks.length,
-                              padding: const EdgeInsets.only(bottom: 16),
-                              itemBuilder: (context, index) {
-                                return _AnimatedTaskItem(
-                                  task: milestoneProvider.tasks[index],
-                                  delay: Duration(
-                                    milliseconds: 100 * index,
-                                  ), // Staggered
-                                );
-                              },
+
+                                Expanded(
+                                  child: milestoneProvider.isLoading
+                                      ? _buildShimmerLoading()
+                                      : ListView.builder(
+                                          itemCount: milestoneProvider.tasks.length,
+                                          padding: const EdgeInsets.only(bottom: 16),
+                                          itemBuilder: (context, index) {
+                                            return _AnimatedTaskItem(
+                                              task: milestoneProvider.tasks[index],
+                                              delay: Duration(
+                                                milliseconds: 100 * index,
+                                              ), // Staggered
+                                            );
+                                          },
+                                        ),
+                                ),
+                              ],
                             ),
-                    ),
-                  ],
+
+                            // Second tab: Show the leaderboard page
+                            LeaderboardPage(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

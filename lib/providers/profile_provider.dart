@@ -1,8 +1,12 @@
+// lib/providers/profile_provider.dart
+
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // 👈 NEW
 import 'package:giftardo/core/services/profile_service.dart';
 
 class ProfileProvider with ChangeNotifier {
   final ProfileService _service = ProfileService();
+  final FirebaseAuth _auth = FirebaseAuth.instance; // 👈 NEW
 
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
@@ -13,17 +17,18 @@ class ProfileProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String get selectedLanguage => _selectedLanguage;
   bool get isNotified => _isNotified;
+  String? get userId => _auth.currentUser?.uid; // 👈 NEW
 
   Future<void> loadProfile() async {
     _isLoading = true;
     notifyListeners();
     try {
       _userData = await _service.fetchUserProfile();
-      
-      // Load preferences from DB or use defaults
+
       _selectedLanguage = _userData?['language'] ?? "English";
       _isNotified = _userData?['notifications_enabled'] ?? true;
     } catch (e) {
+      if (kDebugMode) print('Error loading profile: $e');
       _userData = null;
     }
     _isLoading = false;
@@ -34,8 +39,6 @@ class ProfileProvider with ChangeNotifier {
     await _service.updateLanguage(lang);
     _selectedLanguage = lang;
     notifyListeners();
-    
-    // Update local userData too
     if (_userData != null) {
       _userData!['language'] = lang;
     }
@@ -45,7 +48,6 @@ class ProfileProvider with ChangeNotifier {
     await _service.updateNotificationPreference(value);
     _isNotified = value;
     notifyListeners();
-    
     if (_userData != null) {
       _userData!['notifications_enabled'] = value;
     }

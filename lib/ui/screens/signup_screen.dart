@@ -1,5 +1,6 @@
 // lib/ui/screens/signup_screen.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:giftardo/providers/auth_provider.dart';
@@ -7,6 +8,7 @@ import 'otp_linking_screen.dart';
 import 'package:giftardo/main_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:image_picker/image_picker.dart'; // 👈 NEW
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -24,8 +26,9 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _referralCodeController = TextEditingController(); // 👈 NEW
+  final TextEditingController _referralCodeController = TextEditingController();
   String _gender = "Male";
+  File? _profileImage; // 👈 NEW
 
   Future<void> _getLocationFromGPS() async {
     setState(() => _isGettingLocation = true);
@@ -76,11 +79,21 @@ class _SignupScreenState extends State<SignupScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error fetching location: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching location: $e')),
+      );
     }
     if (mounted) setState(() => _isGettingLocation = false);
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _profileImage = File(picked.path);
+      });
+    }
   }
 
   @override
@@ -115,6 +128,34 @@ class _SignupScreenState extends State<SignupScreen> {
                   style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
                 const SizedBox(height: 30),
+
+                // 👇 Profile Image Picker
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey, width: 2),
+                    ),
+                    child: _profileImage != null
+                        ? ClipOval(
+                      child: Image.file(
+                        _profileImage!,
+                        fit: BoxFit.cover,
+                        width: 100,
+                        height: 100,
+                      ),
+                    )
+                        : const Icon(
+                      Icons.person,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
 
                 TextField(
                   controller: _nameController,
@@ -226,7 +267,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 15),
 
-                // 👇 NEW: Referral Code Field (Optional)
                 TextField(
                   controller: _referralCodeController,
                   decoration: InputDecoration(
@@ -242,104 +282,95 @@ class _SignupScreenState extends State<SignupScreen> {
                 authProvider.isLoading
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
-                        onPressed: () async {
-                          final email = _emailController.text.trim();
-                          final password = _passwordController.text.trim();
-                          final phone =
-                              '$_countryCode${_phoneController.text.trim()}';
+                  onPressed: () async {
+                    final email = _emailController.text.trim();
+                    final password = _passwordController.text.trim();
+                    final phone =
+                        '$_countryCode${_phoneController.text.trim()}';
 
-                          if (email.isEmpty ||
-                              password.isEmpty ||
-                              phone.isEmpty) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Please fill all required fields',
-                                  ),
-                                ),
-                              );
-                            }
-                            return;
-                          }
-                          if (_locationController.text.trim().isEmpty) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Please fetch your location using GPS.',
-                                  ),
-                                ),
-                              );
-                            }
-                            return;
-                          }
+                    if (email.isEmpty ||
+                        password.isEmpty ||
+                        phone.isEmpty) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill all required fields'),
+                          ),
+                        );
+                      }
+                      return;
+                    }
+                    if (_locationController.text.trim().isEmpty) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fetch your location using GPS.'),
+                          ),
+                        );
+                      }
+                      return;
+                    }
 
-                          final success = await authProvider
-                              .requestOtpAndPrepareSignup(
-                                email: email,
-                                password: password,
-                                name: _nameController.text.trim(),
-                                phone: phone,
-                                age: _ageController.text.trim().isEmpty
-                                    ? null
-                                    : int.tryParse(_ageController.text.trim()),
-                                gender: _gender,
-                                location: _locationController.text.trim(),
-                                referralCode: _referralCodeController.text.trim().isNotEmpty
-                                    ? _referralCodeController.text.trim()
-                                    : null, // 👈 PASS REFERRAL CODE
-                              );
+                    final success = await authProvider
+                        .requestOtpAndPrepareSignup(
+                      email: email,
+                      password: password,
+                      name: _nameController.text.trim(),
+                      phone: phone,
+                      age: _ageController.text.trim().isEmpty
+                          ? null
+                          : int.tryParse(_ageController.text.trim()),
+                      gender: _gender,
+                      location: _locationController.text.trim(),
+                      referralCode: _referralCodeController.text.trim().isNotEmpty
+                          ? _referralCodeController.text.trim()
+                          : null,
+                      profileImage: _profileImage, // 👈 PASS IMAGE
+                    );
 
-                          if (!mounted) return;
-                          if (success) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Signup successful! Welcome to Giftardo.',
-                                ),
-                              ),
-                            );
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const MainScreen(),
-                              ),
-                            );
-                          } else if (authProvider.pendingVerificationId !=
-                              null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'OTP sent! Please verify your phone number.',
-                                ),
-                              ),
-                            );
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => OtpLinkingScreen(
-                                  verificationId:
-                                      authProvider.pendingVerificationId!,
-                                  phoneNumber: phone,
-                                ),
-                              ),
-                            );
-                          } else if (authProvider.error != null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(authProvider.error!)),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          minimumSize: const Size.fromHeight(50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                    if (!mounted) return;
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Signup successful! Welcome to Giftardo.'),
+                        ),
+                      );
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MainScreen(),
+                        ),
+                      );
+                    } else if (authProvider.pendingVerificationId != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('OTP sent! Please verify your phone number.'),
+                        ),
+                      );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OtpLinkingScreen(
+                            verificationId: authProvider.pendingVerificationId!,
+                            phoneNumber: phone,
                           ),
                         ),
-                        child: const Text("Sign Up"),
-                      ),
+                      );
+                    } else if (authProvider.error != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(authProvider.error!)),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text("Sign Up"),
+                ),
                 const SizedBox(height: 20),
 
                 Row(
