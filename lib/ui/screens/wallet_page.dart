@@ -119,12 +119,7 @@ class _WalletScreenState extends State<WalletScreen> {
     return Scaffold(
       body: Consumer2<WalletProvider, RewardProvider>(
         builder: (context, walletProvider, rewardProvider, child) {
-          final _badges = [
-            "https://via.placeholder.com/60/FF6B6B/FFFFFF?text=B1",
-            "  https://via.placeholder.com/60/4ECDC4/FFFFFF?text=B2",
-            "  https://via.placeholder.com/60/45B7D1/FFFFFF?text=B3",
-            "  https://via.placeholder.com/60/E67E22/FFFFFF?text=B4",
-          ];
+          // Earned badges removed — no local badge list needed
 
           return SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
@@ -210,55 +205,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
                 SizedBox(height: screenHeight * 0.03),
 
-                // Earned Badges
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Earned Badges",
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.045,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        "View all",
-                        style: TextStyle(fontSize: screenWidth * 0.03, color: Colors.blue),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: screenHeight * 0.01),
-                SizedBox(
-                  width: double.infinity,
-                  child: Wrap(
-                    spacing: screenWidth * 0.02,
-                    runSpacing: screenWidth * 0.02,
-                    children: _badges.map((badge) {
-                      return Container(
-                        width: screenWidth * 0.15,
-                        height: screenWidth * 0.15,
-                        decoration: BoxDecoration(
-                          color: Colors.orange[100],
-                          borderRadius: BorderRadius.circular(50),
-                          border: Border.all(color: Colors.orange[300]!),
-                        ),
-                        child: Center(
-                          child: Image.network(
-                            badge.trim(),
-                            width: screenWidth * 0.1,
-                            height: screenWidth * 0.1,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                SizedBox(height: screenHeight * 0.03),
+                // Earned Badges section removed as requested
 
                 // My Rewards
                 Row(
@@ -286,63 +233,54 @@ class _WalletScreenState extends State<WalletScreen> {
                   width: double.infinity,
                   child: rewardProvider.isLoading
                       ? LoadingComponents.gridLoading(
-                    screenWidth: screenWidth,
-                    screenHeight: screenHeight,
-                    crossAxisCount: 2,
-                    itemCount: 4,
-                  )
-                      : GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: screenWidth * 0.02,
-                      mainAxisSpacing: screenWidth * 0.02,
-                      childAspectRatio: 1.0,
-                    ),
-                    itemCount: rewardProvider.rewards.length,
-                    itemBuilder: (context, index) {
-                      final reward = rewardProvider.rewards[index];
-                      return Container(
-                        padding: EdgeInsets.all(screenWidth * 0.02),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.orange.shade200),
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.white,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
+                          screenWidth: screenWidth,
+                          screenHeight: screenHeight,
+                          crossAxisCount: 2,
+                          itemCount: 4,
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: rewardProvider.rewards.length,
+                          itemBuilder: (context, index) {
+                            final reward = rewardProvider.rewards[index];
+                            return Container(
+                              margin: EdgeInsets.only(bottom: screenWidth * 0.02),
+                              padding: EdgeInsets.all(screenWidth * 0.03),
                               decoration: BoxDecoration(
-                                color: Colors.orange[100],
-                                borderRadius: BorderRadius.circular(50),
-                                border: Border.all(color: Colors.orange[300]!),
+                                border: Border.all(color: Colors.orange.shade200),
+                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.white,
                               ),
-                              child: Image.network(
-                                reward['image'].toString().trim(),
-                                width: 30,
-                                height: 30,
-                                fit: BoxFit.contain,
+                              child: Row(
+                                children: [
+                                  // Image placeholders removed per request — show a simple icon instead
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange[100],
+                                      borderRadius: BorderRadius.circular(50),
+                                      border: Border.all(color: Colors.orange[300]!),
+                                    ),
+                                    child: const Icon(Icons.card_giftcard, color: Colors.orange),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      reward['title'] ?? '',
+                                      style: TextStyle(
+                                        fontSize: screenWidth * 0.037,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                reward['title'],
-                                style: TextStyle(
-                                  fontSize: screenWidth * 0.035,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
                 SizedBox(height: screenHeight * 0.03),
 
