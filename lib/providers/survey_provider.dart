@@ -5,7 +5,8 @@ import '../core/services/survey_service.dart';
 
 class SurveyProvider with ChangeNotifier {
   final SurveyService _surveyService = SurveyService();
-  final String? _userId = FirebaseAuth.instance.currentUser?.uid;
+  // Resolve user id dynamically to avoid capturing null at construction time
+  String? get _userId => FirebaseAuth.instance.currentUser?.uid;
 
   List<Map<String, dynamic>> _surveys = [];
   Map<String, bool> _completionStatus = {};
@@ -40,6 +41,12 @@ class SurveyProvider with ChangeNotifier {
       _isLoading = false;
     }
 
+    notifyListeners();
+  }
+
+  /// Mark an activity as completed locally and notify listeners so UI updates immediately.
+  void markAttempted(String activityId) {
+    _completionStatus[activityId] = true;
     notifyListeners();
   }
 }

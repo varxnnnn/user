@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class SurveyResultPage extends StatelessWidget {
+class SurveyResultPage extends StatefulWidget {
   final String title;
   final List<Map<String, dynamic>> questions;
   final Map<int, dynamic> answers;
@@ -22,6 +22,22 @@ class SurveyResultPage extends StatelessWidget {
     this.rewardDescription,
   });
 
+  @override
+  State<SurveyResultPage> createState() => _SurveyResultPageState();
+}
+
+class _SurveyResultPageState extends State<SurveyResultPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Auto-close after 2.5 seconds and signal success
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        Navigator.of(context).pop(true); // returns true to caller
+      }
+    });
+  }
+
   Widget _buildAnswerDisplay(Map<String, dynamic> q, dynamic answer) {
     final type = q['question_type'];
     switch (type) {
@@ -31,31 +47,9 @@ class SurveyResultPage extends StatelessWidget {
         return Text("Your Rating: ${answer ?? 'Not answered'}");
       case 'mcq':
         final options = List<String>.from(q['options']);
-        final votes = List<int>.from(q['votes'] ?? List.filled(options.length, 0));
-        final totalVotes = votes.fold(0, (a, b) => a + b);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Your Answer: $answer"),
-            const SizedBox(height: 8),
-            ...List.generate(options.length, (i) {
-              final opt = options[i];
-              final voteCount = votes[i];
-              final percentage = totalVotes > 0 ? (voteCount / totalVotes) * 100 : 0;
-              final isSelected = answer == opt;
-              return ListTile(
-                title: Text(opt),
-                subtitle: LinearProgressIndicator(
-                  value: percentage / 100,
-                  color: Colors.green,
-                  backgroundColor: Colors.grey[200],
-                ),
-                trailing: Text("${voteCount} votes"),
-                tileColor: isSelected ? Colors.green[50] : null,
-              );
-            }),
-          ],
-        );
+        // Note: surveys don't store 'votes' like polls — so we skip progress bars
+        // If you DO store votes, keep this logic. Otherwise, simplify.
+        return Text("Your Answer: $answer");
       default:
         return Text("Answer: $answer (Unsupported type: $type)");
     }
@@ -67,10 +61,11 @@ class SurveyResultPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Survey Results"),
         backgroundColor: Colors.green,
+        automaticallyImplyLeading: false, // Hide back button since auto-closing
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: questions.length + 1,
+        itemCount: widget.questions.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
             return Card(
@@ -82,22 +77,28 @@ class SurveyResultPage extends StatelessWidget {
                   children: [
                     const Icon(Icons.check_circle, color: Colors.green, size: 64),
                     const SizedBox(height: 16),
-                    Text("✅ You completed the survey \"$title\"!",
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center),
+                    Text(
+                      "✅ You completed the survey \"${widget.title}\"!",
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 12),
                     Text(
-                        "You have received $rewardedItem $rewardType",
-                        style: const TextStyle(fontSize: 16)),
-                    if (rewardCode != null || rewardTitle != null || rewardDescription != null) ...[
+                      "You have received ${widget.rewardedItem} ${widget.rewardType}",
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    if (widget.rewardCode != null ||
+                        widget.rewardTitle != null ||
+                        widget.rewardDescription != null) ...[
                       const SizedBox(height: 8),
-                      if (rewardTitle != null)
-                        Text(rewardTitle!, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      if (rewardDescription != null)
-                        Text(rewardDescription!),
-                      if (rewardCode != null)
-                        Text("Code: $rewardCode", style: const TextStyle(fontFamily: 'monospace')),
+                      if (widget.rewardTitle != null)
+                        Text(widget.rewardTitle!,
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                      if (widget.rewardDescription != null)
+                        Text(widget.rewardDescription!),
+                      if (widget.rewardCode != null)
+                        Text("Code: ${widget.rewardCode}",
+                            style: const TextStyle(fontFamily: 'monospace')),
                     ],
                   ],
                 ),
@@ -105,8 +106,8 @@ class SurveyResultPage extends StatelessWidget {
             );
           }
 
-          final q = questions[index - 1];
-          final answer = answers[index - 1];
+          final q = widget.questions[index - 1];
+          final answer = widget.answers[index - 1];
 
           return Card(
             margin: const EdgeInsets.only(bottom: 12),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:giftardo/core/services/reward_allocation_service.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/poll_provider.dart';
 import 'poll_result_page.dart';
 
 class PollDetailPage extends StatefulWidget {
@@ -22,7 +24,8 @@ class PollDetailPage extends StatefulWidget {
     required this.sponsorName,
     required this.sponsorLogo,
     required this.pointsAwarded,
-    required this.rewardType, required List<Map<String, dynamic>> questions,
+    required this.rewardType,
+    required List<Map<String, dynamic>> questions,
   }) : super(key: key);
 
   @override
@@ -107,6 +110,61 @@ class _PollDetailPageState extends State<PollDetailPage> {
     }
   }
 
+  Future<void> _saveAbandonedAttempt() async {
+    try {
+      final userRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
+      await userRef.collection('poll_attempts').doc(widget.activityId).set({
+        'activityId': widget.activityId,
+        'activityTitle': widget.title,
+        'description': widget.description,
+        'sponsorName': widget.sponsorName,
+        'rewardType': widget.rewardType,
+        'rewardedItem': 0,
+        'rewardCode': null,
+        'rewardTitle': null,
+        'rewardDescription': null,
+        'answers': _answers.map((k, v) => MapEntry(k.toString(), v)),
+        'timestamp': FieldValue.serverTimestamp(),
+        'userId': widget.userId,
+        'isAbandoned': true,
+      }, SetOptions(merge: true));
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .update({'activitiesCompleted': FieldValue.increment(1)});
+    } catch (e) {
+      debugPrint("Error saving abandoned poll attempt: $e");
+    }
+  }
+
+  Future<bool> _onWillPop() async {
+    final shouldPop = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Exit Poll?"),
+        content: const Text("Are you sure you want to exit? Your progress will be saved as completed."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    ) ??
+        false;
+
+    if (shouldPop) {
+      await _saveAbandonedAttempt();
+      if (mounted) Navigator.of(context).pop();
+    }
+    return shouldPop;
+  }
+
   Future<void> _submitPoll() async {
     if (_answers.length < _questions.length) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -137,9 +195,8 @@ class _PollDetailPageState extends State<PollDetailPage> {
         }
       }
 
-  // Save user's poll attempt (will update with reward details if allocated)
-      final userRef =
-      FirebaseFirestore.instance.collection('users').doc(widget.userId);
+      // Save user's poll attempt
+      final userRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
       await userRef.collection('poll_attempts').doc(widget.activityId).set({
         'activityId': widget.activityId,
         'activityTitle': widget.title,
@@ -155,7 +212,7 @@ class _PollDetailPageState extends State<PollDetailPage> {
         'userId': widget.userId,
       });
 
-      // Increment activitiesCompleted (always, like quiz behavior)
+      // Increment activitiesCompleted
       await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.userId)
@@ -168,7 +225,7 @@ class _PollDetailPageState extends State<PollDetailPage> {
           .doc(widget.activityId)
           .get();
 
-        if (activityDoc.exists) {
+      if (activityDoc.exists) {
         final data = activityDoc.data()!;
         final sponsorId = data['sponsor_id'] as String?;
         final rewardAllocation = data['reward_allocation'] as Map<String, dynamic>?;
@@ -189,7 +246,7 @@ class _PollDetailPageState extends State<PollDetailPage> {
             _rewardTitle = rewardResult['reward_title'] as String?;
             _rewardDescription = rewardResult['reward_description'] as String?;
 
-            // update the poll_attempts document with reward details
+            // Update poll attempt with reward details
             await userRef.collection('poll_attempts').doc(widget.activityId).update({
               'rewardedItem': _actualRewardValue,
               'rewardCode': _rewardCode,
@@ -197,14 +254,16 @@ class _PollDetailPageState extends State<PollDetailPage> {
               'rewardDescription': _rewardDescription,
               'rewardType': _actualRewardType,
             });
-
-      // activitiesCompleted already incremented earlier; no-op here
           }
         }
       }
 
       // Navigate to result page
       if (mounted) {
+        // mark as attempted in provider so lists update immediately
+        try {
+          Provider.of<PollProvider>(context, listen: false).markAttempted(widget.activityId);
+        } catch (_) {}
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -212,8 +271,7 @@ class _PollDetailPageState extends State<PollDetailPage> {
               title: widget.title,
               questions: _questions,
               answers: _answers,
-              rewardedItem:
-              _actualRewardValue > 0 ? _actualRewardValue : widget.pointsAwarded,
+              rewardedItem: _actualRewardValue > 0 ? _actualRewardValue : widget.pointsAwarded,
               rewardType: _actualRewardType ?? widget.rewardType,
               rewardCode: _rewardCode,
               rewardTitle: _rewardTitle,
@@ -227,115 +285,136 @@ class _PollDetailPageState extends State<PollDetailPage> {
         SnackBar(content: Text("Error submitting poll: $e")),
       );
     } finally {
-      setState(() => _isSubmitting = false);
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.title), backgroundColor: Colors.orange),
-      body: Stack(
-        children: [
-          _loadingQuestions
-              ? const Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _questions.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      // Header showing sponsor and reward info
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 24,
-                                backgroundColor: Colors.orange,
-                                child: Text(
-                                  widget.sponsorName.isNotEmpty ? widget.sponsorName[0].toUpperCase() : 'S',
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(widget.sponsorName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                    if (_rewardTitle != null) ...[
-                                      Text(_rewardTitle!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                                      if (_rewardDescription != null)
-                                        Text(_rewardDescription!, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                                    ] else ...[
-                                      Text("Reward: ${_actualRewardValue > 0 ? '$_actualRewardValue points' : '${widget.pointsAwarded} points'}"),
-                                    ],
-                                    Text(widget.title, style: const TextStyle(fontSize: 16)),
-                                  ],
-                                ),
-                              ),
-                            ],
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(title: Text(widget.title), backgroundColor: Colors.orange),
+        body: Stack(
+          children: [
+            _loadingQuestions
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _questions.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Colors.orange,
+                            child: Text(
+                              widget.sponsorName.isNotEmpty ? widget.sponsorName[0].toUpperCase() : 'S',
+                              style: const TextStyle(color: Colors.white),
+                            ),
                           ),
-                        ),
-                      );
-                    }
-
-                    final q = _questions[index - 1];
-                    final question = q['question_text'];
-                    final options = List<String>.from(q['options']);
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(question, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            const SizedBox(height: 8),
-                            ...options.map((option) {
-                              return RadioListTile<String>(
-                                title: Text(option),
-                                value: option,
-                                groupValue: _answers[index - 1],
-                                onChanged: (val) => setState(() => _answers[index - 1] = val!),
-                              );
-                            }).toList(),
-                          ],
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(widget.sponsorName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                if (_rewardTitle != null) ...[
+                                  Text(_rewardTitle!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                  if (_rewardDescription != null)
+                                    Text(_rewardDescription!, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                                ] else ...[
+                                  Text("Reward: ${_actualRewardValue > 0 ? '$_actualRewardValue points' : '${widget.pointsAwarded} points'}"),
+                                ],
+                                Text(widget.title, style: const TextStyle(fontSize: 16)),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
-          // submitting overlay
-          if (_isSubmitting)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withOpacity(0.45),
-                child: const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
+                    ),
+                  );
+                }
+
+                final q = _questions[index - 1];
+                final question = q['question_text'];
+                final options = List<String>.from(q['options']);
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(question, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 8),
+                        ...options.map((option) {
+                          return RadioListTile<String>(
+                            title: Text(option),
+                            value: option,
+                            groupValue: _answers[index - 1],
+                            onChanged: (val) => setState(() => _answers[index - 1] = val!),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            if (_isSubmitting)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withOpacity(0.45),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
                 ),
               ),
+          ],
+        ),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ElevatedButton(
+            onPressed: _isSubmitting ? null : _submitPoll,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-        ],
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ElevatedButton(
-          onPressed: _isSubmitting ? null : _submitPoll,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: _isSubmitting
+                ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Text(
+                  "Submitting",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                SizedBox(width: 8),
+                SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+              ],
+            )
+                : const Text(
+              "Submit Poll",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ),
-          child: _isSubmitting
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text("Submit Poll",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ),
       ),
     );

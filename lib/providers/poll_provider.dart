@@ -5,7 +5,8 @@ import '../core/services/poll_service.dart';
 
 class PollProvider with ChangeNotifier {
   final PollService _pollService = PollService();
-  final String? _userId = FirebaseAuth.instance.currentUser?.uid;
+  // Resolve the user id at call time in case auth state changes after provider creation
+  String? get _userId => FirebaseAuth.instance.currentUser?.uid;
 
   List<Map<String, dynamic>> _polls = [];
   Map<String, bool> _attemptStatus = {}; // activityId -> attempted
@@ -41,6 +42,12 @@ class PollProvider with ChangeNotifier {
       _isLoading = false;
     }
 
+    notifyListeners();
+  }
+
+  /// Mark an activity as attempted locally and notify listeners so UI updates immediately.
+  void markAttempted(String activityId) {
+    _attemptStatus[activityId] = true;
     notifyListeners();
   }
 }

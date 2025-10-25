@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:giftardo/core/services/reward_allocation_service.dart';
 import 'quiz_result_page.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/quiz_provider.dart';
 
 class QuizDetailPage extends StatefulWidget {
   final String activityId;
@@ -38,6 +40,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   bool _submitted = false;
   List<Map<String, dynamic>> _questions = [];
   bool _loadingQuestions = true;
+  bool _isSubmitting = false; // <-- NEW: track submission state
   int _rewardPoints = 0;
   String? _rewardTitle;
   String? _rewardDescription;
@@ -60,10 +63,8 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
         final data = activityDoc.data()!;
         setState(() {
           _rewardPoints = data['cost_points'] ?? 0;
-          // If reward allocation present, try to show reward title/description
           final rewardAlloc = data['reward_allocation'] as Map<String, dynamic>?;
           if (rewardAlloc != null && rewardAlloc['reward_id'] != null) {
-            // fetch reward meta
             FirebaseFirestore.instance
                 .collection('sponsor_rewards')
                 .doc(rewardAlloc['reward_id'] as String)
@@ -117,8 +118,82 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     }
   }
 
+  Future<void> _saveAbandonedAttempt() async {
+    final attemptData = {
+      'activityId': widget.activityId,
+      'activityTitle': widget.title,
+      'description': widget.description,
+      'sponsorName': widget.sponsorName,
+      'rewardType': widget.rewardType,
+      'rewardedItem': 0,
+      'rewardCode': null,
+      'rewardTitle': null,
+      'rewardDescription': null,
+      'score': 0,
+      'totalQuestions': _questions.length,
+      'answers': _answers,
+      'timestamp': FieldValue.serverTimestamp(),
+      'rewarded': false,
+      'userId': widget.userId,
+      'isAbandoned': true,
+    };
+
+    try {
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(widget.userId);
+      await userDoc.collection('quiz_attempts').doc(widget.activityId).set(attemptData, SetOptions(merge: true));
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .update({'activitiesCompleted': FieldValue.increment(1)});
+    } catch (e) {
+      debugPrint("Error saving abandoned quiz attempt: $e");
+    }
+  }
+
+  Future<bool> _onWillPop() async {
+    final shouldPop = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Exit Quiz?"),
+        content: const Text("Are you sure you want to exit? Your progress will be saved as completed."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    ) ??
+        false;
+
+    if (shouldPop) {
+      await _saveAbandonedAttempt();
+      if (mounted) Navigator.of(context).pop();
+    }
+    return shouldPop;
+  }
+
   Future<void> _submitQuiz() async {
-    if (_submitted || _questions.isEmpty) return;
+    if (_submitted || _questions.isEmpty || _isSubmitting) return;
+
+    // Validate all answered
+    for (int i = 0; i < _answers.length; i++) {
+      if (_answers[i] == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please answer all questions")),
+        );
+        return;
+      }
+    }
+
+    setState(() {
+      _submitted = true;
+      _isSubmitting = true; // <-- Enable loading
+    });
 
     int score = 0;
     bool allCorrect = true;
@@ -128,13 +203,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       if (_answers[i] != null && _answers[i] == q['correct_answer']) {
         score++;
       } else {
-        allCorrect = false; // mark as not fully correct
+        allCorrect = false;
       }
     }
-
-    setState(() {
-      _submitted = true;
-    });
 
     int finalRewardPoints = _rewardPoints;
     String? rewardCode;
@@ -142,82 +213,69 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     String? rewardTitle;
     String? rewardDescription;
 
-    // Use new reward allocation service if user passed the quiz
-    if (allCorrect) {
-      final rewardService = RewardAllocationService();
+    try {
+      if (allCorrect) {
+        final rewardService = RewardAllocationService();
+        final activityDoc = await FirebaseFirestore.instance
+            .collection('sponsor_activities')
+            .doc(widget.activityId)
+            .get();
 
-      // Get activity details to find sponsor_id and reward_id
-      final activityDoc = await FirebaseFirestore.instance
-          .collection('sponsor_activities')
-          .doc(widget.activityId)
-          .get();
+        if (activityDoc.exists) {
+          final activityData = activityDoc.data()!;
+          final sponsorId = activityData['sponsor_id'] as String?;
+          final rewardAllocation = activityData['reward_allocation'] as Map<String, dynamic>?;
+          final rewardId = rewardAllocation?['reward_id'] as String?;
 
-      if (activityDoc.exists) {
-        final activityData = activityDoc.data()!;
-        final sponsorId = activityData['sponsor_id'] as String?;
-        final rewardAllocation =
-            activityData['reward_allocation'] as Map<String, dynamic>?;
-        final rewardId = rewardAllocation?['reward_id'] as String?;
+          if (sponsorId != null && rewardId != null) {
+            final rewardResult = await rewardService.allocateRewardToUser(
+              activityId: widget.activityId,
+              userId: widget.userId,
+              sponsorId: sponsorId,
+              rewardId: rewardId,
+            );
 
-        if (sponsorId != null && rewardId != null) {
-          final rewardResult = await rewardService.allocateRewardToUser(
-            activityId: widget.activityId,
-            userId: widget.userId,
-            sponsorId: sponsorId,
-            rewardId: rewardId,
-          );
-
-          if (rewardResult != null) {
-            finalRewardPoints = rewardResult['reward_value'] as int? ?? 0;
-            rewardCode = rewardResult['reward_code'] as String?;
-            actualRewardType =
-                rewardResult['reward_type'] as String? ?? 'points';
-            rewardTitle = rewardResult['reward_title'] as String? ?? 'Reward';
-            rewardDescription =
-                rewardResult['reward_description'] as String? ?? '';
+            if (rewardResult != null) {
+              finalRewardPoints = rewardResult['reward_value'] as int? ?? 0;
+              rewardCode = rewardResult['reward_code'] as String?;
+              actualRewardType = rewardResult['reward_type'] as String? ?? 'points';
+              rewardTitle = rewardResult['reward_title'] as String? ?? 'Reward';
+              rewardDescription = rewardResult['reward_description'] as String? ?? '';
+            }
           }
         }
       }
-    }
 
-    final attemptData = {
-      'activityId': widget.activityId,
-      'activityTitle': widget.title,
-      'description': widget.description,
-      'sponsorName': widget.sponsorName,
-      'rewardType':
-          actualRewardType ?? widget.rewardType, // Use actual reward type
-      'rewardedItem': finalRewardPoints, // Use actual reward value
-      'rewardCode': rewardCode, // Include reward code if available
-      'rewardTitle': rewardTitle, // Include reward title
-      'rewardDescription': rewardDescription, // Include reward description
-      'score': score,
-      'totalQuestions': _questions.length,
-      'answers': _answers,
-      'timestamp': FieldValue.serverTimestamp(),
-      'rewarded': allCorrect,
-      'userId': widget.userId,
-    };
+      final attemptData = {
+        'activityId': widget.activityId,
+        'activityTitle': widget.title,
+        'description': widget.description,
+        'sponsorName': widget.sponsorName,
+        'rewardType': actualRewardType ?? widget.rewardType,
+        'rewardedItem': finalRewardPoints,
+        'rewardCode': rewardCode,
+        'rewardTitle': rewardTitle,
+        'rewardDescription': rewardDescription,
+        'score': score,
+        'totalQuestions': _questions.length,
+        'answers': _answers,
+        'timestamp': FieldValue.serverTimestamp(),
+        'rewarded': allCorrect,
+        'userId': widget.userId,
+      };
 
-    try {
-      final userDoc = FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.userId);
-
-      // Save to user's quiz_attempts
-      await userDoc
-          .collection('quiz_attempts')
-          .doc(widget.activityId)
-          .set(attemptData);
-
-      // Increment activitiesCompleted only once
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(widget.userId);
+      await userDoc.collection('quiz_attempts').doc(widget.activityId).set(attemptData);
       await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.userId)
           .update({'activitiesCompleted': FieldValue.increment(1)});
 
-      // Navigate to QuizResultPage
       if (mounted) {
+        // mark in provider so the quizzes list updates immediately
+        try {
+          Provider.of<QuizProvider>(context, listen: false).markAttempted(widget.activityId);
+        } catch (_) {}
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => QuizResultPage(
@@ -251,58 +309,89 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
           ),
         );
       }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          // Note: we don't reset _submitted because we navigate away
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Quiz Detail"),
-        centerTitle: true,
-        backgroundColor: Colors.orange,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Quiz Detail"),
+          centerTitle: true,
+          backgroundColor: Colors.orange,
+        ),
+        body: Stack(
           children: [
-            _buildHeader(),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _loadingQuestions
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildQuestions(),
-            ),
-            if (!_submitted && !_loadingQuestions && _questions.isNotEmpty)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submitted ? null : _submitQuiz,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: _loadingQuestions
+                        ? const Center(child: CircularProgressIndicator())
+                        : _buildQuestions(),
                   ),
-                  child: _submitted
-                      ? const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
+                  if (!_submitted && !_loadingQuestions && _questions.isNotEmpty)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isSubmitting ? null : _submitQuiz,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: _isSubmitting
+                            ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Text(
+                              "Submitting",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
                             SizedBox(width: 8),
-                            Text("Submitting..."),
+                            SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
                           ],
                         )
-                      : const Text("Submit Quiz"),
+                            : const Text("Submit Quiz"),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            // Full-screen loading overlay
+            if (_isSubmitting)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withOpacity(0.4),
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -385,15 +474,17 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                 const SizedBox(height: 8),
                 ...List<Widget>.generate(
                   (q['options'] as List<dynamic>).length,
-                  (optIndex) {
+                      (optIndex) {
                     final option = q['options'][optIndex];
                     return RadioListTile<String>(
                       value: option,
                       groupValue: _answers[index],
                       onChanged: (value) {
-                        setState(() {
-                          _answers[index] = value;
-                        });
+                        if (!_submitted && !_isSubmitting) {
+                          setState(() {
+                            _answers[index] = value;
+                          });
+                        }
                       },
                       title: Text(option),
                     );
