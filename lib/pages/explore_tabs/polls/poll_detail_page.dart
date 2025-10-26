@@ -5,7 +5,7 @@ import 'package:giftardo/core/services/reward_allocation_service.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/poll_provider.dart';
 import 'poll_result_page.dart';
-import 'package:lottie/lottie.dart';
+// Lottie package removed for poll details; using simple overlay instead
 
 class PollDetailPage extends StatefulWidget {
   final String userId;
@@ -33,13 +33,12 @@ class PollDetailPage extends StatefulWidget {
   State<PollDetailPage> createState() => _PollDetailPageState();
 }
 
-class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStateMixin {
+class _PollDetailPageState extends State<PollDetailPage> {
   List<Map<String, dynamic>> _questions = [];
   final Map<int, String> _answers = {};
   bool _loadingQuestions = true;
   bool _isSubmitting = false;
   int _currentIndex = 0;
-  late AnimationController _confettiController;
   String? _rewardTitle;
   String? _rewardDescription;
 
@@ -48,12 +47,10 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
     super.initState();
     _loadPollQuestions();
     _loadRewardMeta();
-    _confettiController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
   }
 
   @override
   void dispose() {
-    _confettiController.dispose();
     super.dispose();
   }
 
@@ -269,27 +266,25 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
       // Mark as attempted
       Provider.of<PollProvider>(context, listen: false).markAttempted(widget.activityId);
 
-      // Play confetti before navigating
-      _confettiController.forward().then((_) {
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => PollResultPage(
-                title: widget.title,
-                sponsorName: widget.sponsorName,
-                sponsorProfilePic: widget.sponsorProfilePic,
-                questions: _questions,
-                answers: _answers,
-                rewardedItem: actualRewardValue,
-                rewardType: actualRewardType ?? widget.rewardType,
-                rewardCode: rewardCode,
-                rewardTitle: rewardTitle,
-                rewardDescription: rewardDescription,
-              ),
+      // Navigate directly to result page (animation removed)
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => PollResultPage(
+              title: widget.title,
+              sponsorName: widget.sponsorName,
+              sponsorProfilePic: widget.sponsorProfilePic,
+              questions: _questions,
+              answers: _answers,
+              rewardedItem: actualRewardValue,
+              rewardType: actualRewardType ?? widget.rewardType,
+              rewardCode: rewardCode,
+              rewardTitle: rewardTitle,
+              rewardDescription: rewardDescription,
             ),
-          );
-        }
-      });
+          ),
+        );
+      }
 
     } catch (e) {
       if (mounted) {
@@ -439,12 +434,13 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
                           child: SizedBox(
                             width: 200,
                             height: 200,
-                            child: Lottie.asset(
-                              'assets/animations/confetti.json', // 👈 You can replace with any Lottie JSON
-                              controller: _confettiController,
-                              onLoaded: (composition) {
-                                _confettiController.duration = composition.duration;
-                              },
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                CircularProgressIndicator(color: Colors.white),
+                                SizedBox(height: 12),
+                                Text('Submitting...', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              ],
                             ),
                           ),
                         ),
