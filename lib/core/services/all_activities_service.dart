@@ -33,6 +33,10 @@ class AllActivitiesService {
       final questions = (data['questions'] as List<dynamic>?) ?? [];
       final estimatedMinutes = (questions.length / 5).ceil().clamp(1, 10);
 
+<<<<<<< HEAD
+=======
+      final sponsorDetails = data['sponsor_details'] as Map<String, dynamic>?;
+>>>>>>> f9e1824 (newly_updated_4)
       return {
         'activityId': doc.id,
         'title': data['title'] ?? 'Untitled',
@@ -41,7 +45,12 @@ class AllActivitiesService {
         'points': '${data['reward']?['points'] ?? 0} pts',
         'time': '$estimatedMinutes min',
         'rawType': data['type'], // for navigation
+<<<<<<< HEAD
         'sponsorName': data['sponsor_name'] ?? 'Sponsor',
+=======
+        'sponsorName': sponsorDetails?['name'] ?? data['sponsor_name'] ?? 'Sponsor',
+        'sponsorProfilePic': sponsorDetails?['profile_pic'] ?? '',
+>>>>>>> f9e1824 (newly_updated_4)
         'questions': questions,
       };
     }).toList();

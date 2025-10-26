@@ -13,7 +13,11 @@ class PollDetailPage extends StatefulWidget {
   final String title;
   final String description;
   final String sponsorName;
+<<<<<<< HEAD
   final String sponsorLogo;
+=======
+  final String sponsorProfilePic;
+>>>>>>> f9e1824 (newly_updated_4)
   final int pointsAwarded;
   final String rewardType;
 
@@ -24,7 +28,11 @@ class PollDetailPage extends StatefulWidget {
     required this.title,
     required this.description,
     required this.sponsorName,
+<<<<<<< HEAD
     required this.sponsorLogo,
+=======
+    required this.sponsorProfilePic,
+>>>>>>> f9e1824 (newly_updated_4)
     required this.pointsAwarded,
     required this.rewardType,
   }) : super(key: key);
@@ -97,11 +105,27 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
 
       final questions = snapshot.docs.map((doc) {
         final data = doc.data();
+<<<<<<< HEAD
         return {
           'id': doc.id,
           'question_text': data['question_text'],
           'options': List<String>.from(data['options'] ?? []),
           'votes': List<int>.from(data['votes'] ?? []),
+=======
+        final options = List<String>.from(data['options'] ?? []);
+        final rawVotes = List<int>.from(data['votes'] ?? []);
+        // Ensure votes list has same length as options (fill missing with zeros)
+        final votes = List<int>.filled(options.length, 0);
+        for (var i = 0; i < rawVotes.length && i < votes.length; i++) {
+          votes[i] = rawVotes[i];
+        }
+
+        return {
+          'id': doc.id,
+          'question_text': data['question_text'],
+          'options': options,
+          'votes': votes,
+>>>>>>> f9e1824 (newly_updated_4)
         };
       }).toList();
 
@@ -264,10 +288,28 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
       // Play confetti before navigating
       _confettiController.forward().then((_) {
         if (mounted) {
+<<<<<<< HEAD
           Navigator.of(context).pop(); // Return to poll list
           // Optional: show snackbar
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('✅ Poll completed! You earned $actualRewardValue ${actualRewardType ?? 'points'}')),
+=======
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => PollResultPage(
+                title: widget.title,
+                sponsorName: widget.sponsorName,
+                sponsorProfilePic: widget.sponsorProfilePic,
+                questions: _questions,
+                answers: _answers,
+                rewardedItem: actualRewardValue,
+                rewardType: actualRewardType ?? widget.rewardType,
+                rewardCode: rewardCode,
+                rewardTitle: rewardTitle,
+                rewardDescription: rewardDescription,
+              ),
+            ),
+>>>>>>> f9e1824 (newly_updated_4)
           );
         }
       });
@@ -301,6 +343,7 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
+<<<<<<< HEAD
           title: Text(widget.title),
           backgroundColor: Colors.orange,
           leading: _currentIndex > 0
@@ -312,6 +355,37 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
           actions: [
             Text('${_currentIndex + 1}/${_questions.length}'),
             const SizedBox(width: 16),
+=======
+          title: const Text("Poll"),
+          centerTitle: true,
+          backgroundColor: Colors.orange.shade700,
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  backgroundColor: Colors.white,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                  builder: (_) => Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text("How it works", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 8),
+                      const Text("• Answer each question by selecting an option"),
+                      const SizedBox(height: 4),
+                      const Text("• Your answers help gather valuable feedback"),
+                      const SizedBox(height: 4),
+                      const Text("• Complete the poll to claim your reward"),
+                      const SizedBox(height: 12),
+                      Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it"))),
+                    ]),
+                  ),
+                );
+              },
+            )
+>>>>>>> f9e1824 (newly_updated_4)
           ],
         ),
         body: _loadingQuestions
@@ -320,12 +394,87 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16.0),
+<<<<<<< HEAD
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 400),
                       transitionBuilder: (Widget child, Animation<double> animation) {
                         return FadeScaleTransition(animation: animation, child: child);
                       },
                       child: _buildQuestionCard(_questions[_currentIndex], _currentIndex),
+=======
+                    child: Column(
+                      children: [
+                        // Sponsor Header
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 28,
+                              backgroundColor: Colors.orange.shade700,
+                              backgroundImage: widget.sponsorProfilePic.isNotEmpty ? NetworkImage(widget.sponsorProfilePic) : null,
+                              child: widget.sponsorProfilePic.isEmpty
+                                  ? Text(
+                                      widget.sponsorName.isNotEmpty ? widget.sponsorName[0].toUpperCase() : 'S',
+                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                                    )
+                                  : null,
+                              onBackgroundImageError: (exception, stackTrace) {
+                                debugPrint('Failed to load sponsor profile pic: $exception');
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(widget.sponsorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                  const SizedBox(height: 4),
+                                  if (_rewardTitle != null)
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(_rewardTitle!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                        if (_rewardDescription != null)
+                                          Text(_rewardDescription!, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                      ],
+                                    )
+                                  else
+                                    Text("Reward: ${widget.pointsAwarded} points"),
+                                  const SizedBox(height: 6),
+                                  Text(widget.title, style: const TextStyle(fontSize: 15)),
+                                ],
+                              ),
+                            ),
+                            // Progress indicator
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text('${_currentIndex + 1}/${_questions.isEmpty ? 0 : _questions.length}',
+                                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 6),
+                                SizedBox(
+                                  width: 60,
+                                  child: LinearProgressIndicator(
+                                    value: _questions.isEmpty ? 0 : (_currentIndex + 1) / _questions.length,
+                                    backgroundColor: Colors.orange.shade100,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.orange.shade700),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Expanded(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            transitionBuilder: (Widget child, Animation<double> animation) {
+                              return FadeScaleTransition(animation: animation, child: child);
+                            },
+                            child: _buildQuestionCard(_questions[_currentIndex], _currentIndex),
+                          ),
+                        ),
+                      ],
+>>>>>>> f9e1824 (newly_updated_4)
                     ),
                   ),
                   if (_isSubmitting)
@@ -393,7 +542,10 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
             ),
             const SizedBox(height: 24),
             ...options.asMap().entries.map((entry) {
+<<<<<<< HEAD
               final i = entry.key;
+=======
+>>>>>>> f9e1824 (newly_updated_4)
               final option = entry.value;
               final isSelected = currentAnswer == option;
 

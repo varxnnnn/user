@@ -56,6 +56,7 @@ class PollsScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+<<<<<<< HEAD
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
                   leading: CircleAvatar(
@@ -114,6 +115,103 @@ class PollsScreen extends StatelessWidget {
                           ),
                           child: const Text("Participate"),
                         ),
+=======
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Top row: avatar, title/sponsor, action
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Colors.orange,
+                            backgroundImage: poll['sponsorProfilePic']?.toString().isNotEmpty == true
+                                ? NetworkImage(poll['sponsorProfilePic'] as String)
+                                : null,
+                            child: poll['sponsorProfilePic']?.toString().isNotEmpty != true
+                                ? Text((poll['sponsorName'] ?? 'S')[0].toUpperCase(), style: const TextStyle(color: Colors.white))
+                                : null,
+                            onBackgroundImageError: (exception, stackTrace) {
+                              debugPrint('Failed to load sponsor profile pic: $exception');
+                            },
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(poll['activityTitle'] ?? '', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 4),
+                                Row(children: [const Icon(Icons.business, size: 16, color: Colors.grey), const SizedBox(width: 4), Text(poll['sponsorName'] ?? '', style: const TextStyle(color: Colors.grey))])
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              attempted
+                                  ? Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(12)),
+                                      child: const Text('Completed', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                    )
+                                  : ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => PollDetailPage(
+                                              userId: currentUser.uid,
+                                              activityId: activityId,
+                                              title: poll['activityTitle'] ?? '',
+                                              description: poll['rewardDescription'] ?? '',
+                                              sponsorName: poll['sponsorName'] ?? '',
+                                              sponsorProfilePic: poll['sponsorProfilePic'] ?? '',
+                                              pointsAwarded: pointsAwarded,
+                                              rewardType: poll['rewardType'] ?? 'Points',
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                                      child: const Text('Participate'),
+                                    )
+                            ],
+                          )
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Reward details (simple: title, type, metadata)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                        child: Builder(builder: (_) {
+                          final rTitle = poll['rewardTitle'] as String? ?? '';
+                          final rType = (poll['rewardType'] ?? 'points').toString();
+                          final rData = (poll['rewardData'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+                          return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(rTitle.isNotEmpty ? rTitle : 'Reward', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 6),
+                            Text('Type: ${rType[0].toUpperCase()}${rType.substring(1)}', style: const TextStyle(color: Colors.grey)),
+                            if (rData.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              const Text('Details:', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey)),
+                              const SizedBox(height: 4),
+                              ...rData.entries.map((e) => Text('${e.key}: ${e.value}', style: const TextStyle(color: Colors.grey, fontSize: 13))).toList()
+                            ]
+                          ]);
+                        }),
+                      ),
+                    ],
+                  ),
+>>>>>>> f9e1824 (newly_updated_4)
                 ),
               );
             },

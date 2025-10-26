@@ -389,10 +389,20 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
           CircleAvatar(
             radius: 28,
             backgroundColor: Colors.orange.shade700,
+<<<<<<< HEAD
             child: Text(
               widget.sponsorName.isNotEmpty ? widget.sponsorName[0].toUpperCase() : 'S',
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
             ),
+=======
+            backgroundImage: widget.sponsorLogo.isNotEmpty ? NetworkImage(widget.sponsorLogo) : null,
+            child: widget.sponsorLogo.isEmpty
+                ? Text(
+                    widget.sponsorName.isNotEmpty ? widget.sponsorName[0].toUpperCase() : 'S',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                  )
+                : null,
+>>>>>>> f9e1824 (newly_updated_4)
           ),
           const SizedBox(width: 12),
           Expanded(
