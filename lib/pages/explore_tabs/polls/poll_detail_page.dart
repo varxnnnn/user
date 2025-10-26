@@ -1,9 +1,11 @@
+// poll_detail_page.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:giftardo/core/services/reward_allocation_service.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/poll_provider.dart';
 import 'poll_result_page.dart';
+import 'package:lottie/lottie.dart';
 
 class PollDetailPage extends StatefulWidget {
   final String userId;
@@ -25,21 +27,19 @@ class PollDetailPage extends StatefulWidget {
     required this.sponsorLogo,
     required this.pointsAwarded,
     required this.rewardType,
-    required List<Map<String, dynamic>> questions,
   }) : super(key: key);
 
   @override
   State<PollDetailPage> createState() => _PollDetailPageState();
 }
 
-class _PollDetailPageState extends State<PollDetailPage> {
+class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _questions = [];
   final Map<int, String> _answers = {};
   bool _loadingQuestions = true;
   bool _isSubmitting = false;
-  int _actualRewardValue = 0;
-  String? _rewardCode;
-  String? _actualRewardType;
+  int _currentIndex = 0;
+  late AnimationController _confettiController;
   String? _rewardTitle;
   String? _rewardDescription;
 
@@ -48,6 +48,13 @@ class _PollDetailPageState extends State<PollDetailPage> {
     super.initState();
     _loadPollQuestions();
     _loadRewardMeta();
+    _confettiController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadRewardMeta() async {
@@ -143,20 +150,13 @@ class _PollDetailPageState extends State<PollDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Exit Poll?"),
-        content: const Text("Are you sure you want to exit? Your progress will be saved as completed."),
+        content: const Text("Your progress will be saved. Are you sure?"),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("No"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("Yes"),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("No")),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text("Yes")),
         ],
       ),
-    ) ??
-        false;
+    ) ?? false;
 
     if (shouldPop) {
       await _saveAbandonedAttempt();
@@ -176,7 +176,7 @@ class _PollDetailPageState extends State<PollDetailPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      // Update votes for each question
+      // Update votes in Firestore
       for (int i = 0; i < _questions.length; i++) {
         final q = _questions[i];
         final selectedOption = _answers[i];
@@ -184,7 +184,6 @@ class _PollDetailPageState extends State<PollDetailPage> {
           final optionIndex = q['options'].indexOf(selectedOption);
           if (optionIndex >= 0) {
             q['votes'][optionIndex] = (q['votes'][optionIndex] ?? 0) + 1;
-
             await FirebaseFirestore.instance
                 .collection('sponsor_activities')
                 .doc(widget.activityId)
@@ -195,7 +194,7 @@ class _PollDetailPageState extends State<PollDetailPage> {
         }
       }
 
-      // Save user's poll attempt
+      // Save attempt
       final userRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
       await userRef.collection('poll_attempts').doc(widget.activityId).set({
         'activityId': widget.activityId,
@@ -212,7 +211,6 @@ class _PollDetailPageState extends State<PollDetailPage> {
         'userId': widget.userId,
       });
 
-      // Increment activitiesCompleted
       await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.userId)
@@ -224,6 +222,9 @@ class _PollDetailPageState extends State<PollDetailPage> {
           .collection('sponsor_activities')
           .doc(widget.activityId)
           .get();
+
+      int actualRewardValue = widget.pointsAwarded;
+      String? rewardCode, actualRewardType, rewardTitle, rewardDescription;
 
       if (activityDoc.exists) {
         final data = activityDoc.data()!;
@@ -240,54 +241,56 @@ class _PollDetailPageState extends State<PollDetailPage> {
           );
 
           if (rewardResult != null) {
-            _actualRewardValue = rewardResult['reward_value'] as int? ?? 0;
-            _rewardCode = rewardResult['reward_code'] as String?;
-            _actualRewardType = rewardResult['reward_type'] as String? ?? widget.rewardType;
-            _rewardTitle = rewardResult['reward_title'] as String?;
-            _rewardDescription = rewardResult['reward_description'] as String?;
+            actualRewardValue = rewardResult['reward_value'] as int? ?? widget.pointsAwarded;
+            rewardCode = rewardResult['reward_code'] as String?;
+            actualRewardType = rewardResult['reward_type'] as String? ?? widget.rewardType;
+            rewardTitle = rewardResult['reward_title'] as String?;
+            rewardDescription = rewardResult['reward_description'] as String?;
 
-            // Update poll attempt with reward details
             await userRef.collection('poll_attempts').doc(widget.activityId).update({
-              'rewardedItem': _actualRewardValue,
-              'rewardCode': _rewardCode,
-              'rewardTitle': _rewardTitle,
-              'rewardDescription': _rewardDescription,
-              'rewardType': _actualRewardType,
+              'rewardedItem': actualRewardValue,
+              'rewardCode': rewardCode,
+              'rewardTitle': rewardTitle,
+              'rewardDescription': rewardDescription,
+              'rewardType': actualRewardType,
             });
           }
         }
       }
 
-      // Navigate to result page
-      if (mounted) {
-        // mark as attempted in provider so lists update immediately
-        try {
-          Provider.of<PollProvider>(context, listen: false).markAttempted(widget.activityId);
-        } catch (_) {}
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PollResultPage(
-              title: widget.title,
-              questions: _questions,
-              answers: _answers,
-              rewardedItem: _actualRewardValue > 0 ? _actualRewardValue : widget.pointsAwarded,
-              rewardType: _actualRewardType ?? widget.rewardType,
-              rewardCode: _rewardCode,
-              rewardTitle: _rewardTitle,
-              rewardDescription: _rewardDescription,
-            ),
-          ),
-        );
-      }
+      // Mark as attempted
+      Provider.of<PollProvider>(context, listen: false).markAttempted(widget.activityId);
+
+      // Play confetti before navigating
+      _confettiController.forward().then((_) {
+        if (mounted) {
+          Navigator.of(context).pop(); // Return to poll list
+          // Optional: show snackbar
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('✅ Poll completed! You earned $actualRewardValue ${actualRewardType ?? 'points'}')),
+          );
+        }
+      });
+
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error submitting poll: $e")),
-      );
-    } finally {
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Submission failed: $e")));
         setState(() => _isSubmitting = false);
       }
+    }
+  }
+
+  void _goToNext() {
+    if (_currentIndex < _questions.length - 1) {
+      setState(() => _currentIndex++);
+    } else {
+      _submitPoll();
+    }
+  }
+
+  void _goToPrevious() {
+    if (_currentIndex > 0) {
+      setState(() => _currentIndex--);
     }
   }
 
@@ -296,126 +299,199 @@ class _PollDetailPageState extends State<PollDetailPage> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        appBar: AppBar(title: Text(widget.title), backgroundColor: Colors.orange),
-        body: Stack(
-          children: [
-            _loadingQuestions
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _questions.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Colors.orange,
-                            child: Text(
-                              widget.sponsorName.isNotEmpty ? widget.sponsorName[0].toUpperCase() : 'S',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(widget.sponsorName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                if (_rewardTitle != null) ...[
-                                  Text(_rewardTitle!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                                  if (_rewardDescription != null)
-                                    Text(_rewardDescription!, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                                ] else ...[
-                                  Text("Reward: ${_actualRewardValue > 0 ? '$_actualRewardValue points' : '${widget.pointsAwarded} points'}"),
-                                ],
-                                Text(widget.title, style: const TextStyle(fontSize: 16)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                final q = _questions[index - 1];
-                final question = q['question_text'];
-                final options = List<String>.from(q['options']);
-
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(question, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(height: 8),
-                        ...options.map((option) {
-                          return RadioListTile<String>(
-                            title: Text(option),
-                            value: option,
-                            groupValue: _answers[index - 1],
-                            onChanged: (val) => setState(() => _answers[index - 1] = val!),
-                          );
-                        }).toList(),
-                      ],
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: Text(widget.title),
+          backgroundColor: Colors.orange,
+          leading: _currentIndex > 0
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: _goToPrevious,
+                )
+              : null,
+          actions: [
+            Text('${_currentIndex + 1}/${_questions.length}'),
+            const SizedBox(width: 16),
+          ],
+        ),
+        body: _loadingQuestions
+            ? const Center(child: CircularProgressIndicator())
+            : Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return FadeScaleTransition(animation: animation, child: child);
+                      },
+                      child: _buildQuestionCard(_questions[_currentIndex], _currentIndex),
                     ),
                   ),
-                );
-              },
-            ),
-            if (_isSubmitting)
-              Positioned.fill(
-                child: Container(
-                  color: Colors.black.withOpacity(0.45),
-                  child: const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                  if (_isSubmitting)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.6),
+                        child: Center(
+                          child: SizedBox(
+                            width: 200,
+                            height: 200,
+                            child: Lottie.asset(
+                              'assets/animations/confetti.json', // 👈 You can replace with any Lottie JSON
+                              controller: _confettiController,
+                              onLoaded: (composition) {
+                                _confettiController.duration = composition.duration;
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+        bottomNavigationBar: _questions.isEmpty
+            ? null
+            : Padding(
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _goToNext,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      elevation: 4,
+                    ),
+                    child: Text(
+                      _currentIndex == _questions.length - 1 ? 'Submit Poll' : 'Next',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
                   ),
                 ),
               ),
+      ),
+    );
+  }
+
+  Widget _buildQuestionCard(Map<String, dynamic> q, int index) {
+    final question = q['question_text'] as String;
+    final options = List<String>.from(q['options']);
+    final currentAnswer = _answers[index];
+
+    return Card(
+      key: ValueKey('question-$index'), // essential for AnimatedSwitcher
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              question,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, height: 1.4),
+            ),
+            const SizedBox(height: 24),
+            ...options.asMap().entries.map((entry) {
+              final i = entry.key;
+              final option = entry.value;
+              final isSelected = currentAnswer == option;
+
+              return _buildOptionButton(
+                option: option,
+                isSelected: isSelected,
+                onTap: () {
+                  setState(() {
+                    _answers[index] = option;
+                  });
+                  // Auto-advance after a short delay for fluidity
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (mounted && _currentIndex == index) _goToNext();
+                  });
+                },
+              );
+            }).toList(),
           ],
         ),
-        bottomNavigationBar: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ElevatedButton(
-            onPressed: _isSubmitting ? null : _submitPoll,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: _isSubmitting
-                ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text(
-                  "Submitting",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildOptionButton({
+    required String option,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutExpo,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.orange.withOpacity(0.15) : Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected ? Colors.orange : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 200),
+          scale: isSelected ? 1.02 : 1.0,
+          child: Row(
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.orange : Colors.transparent,
+                  border: Border.all(color: Colors.grey[400]!, width: 1.5),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                SizedBox(width: 8),
-                SizedBox(
-                  height: 16,
-                  width: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                child: isSelected
+                    ? Icon(Icons.check, size: 16, color: Colors.white)
+                    : null,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  option,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    color: isSelected ? Colors.orange : null,
                   ),
                 ),
-              ],
-            )
-                : const Text(
-              "Submit Poll",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Custom transition for smooth question swaps
+class FadeScaleTransition extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
+
+  const FadeScaleTransition({
+    Key? key,
+    required this.animation,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: animation,
+      child: ScaleTransition(
+        scale: animation,
+        child: child,
       ),
     );
   }

@@ -1,3 +1,4 @@
+// screens/quiz_result_page.dart
 import 'package:flutter/material.dart';
 
 class QuizResultPage extends StatelessWidget {
@@ -37,37 +38,6 @@ class QuizResultPage extends StatelessWidget {
     this.rewardTitle,
     this.rewardDescription,
   }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Quiz Results"),
-        centerTitle: true,
-        backgroundColor: Colors.orange,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.home),
-            onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 16),
-            Expanded(child: _buildAnalysis()),
-            _buildActionButtons(context),
-          ],
-        ),
-      ),
-    );
-  }
 
   String _getRewardDisplayText() {
     if (!rewarded) {
@@ -112,7 +82,7 @@ class QuizResultPage extends StatelessWidget {
           radius: 24,
           backgroundColor: Colors.orange,
           child: Text(
-            sponsorName[0].toUpperCase(),
+            sponsorName.isNotEmpty ? sponsorName[0].toUpperCase() : 'S',
             style: const TextStyle(color: Colors.white),
           ),
         ),
@@ -134,7 +104,7 @@ class QuizResultPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAnalysis() {
+  Widget _buildAnalysis(BuildContext context) {
     return ListView.builder(
       itemCount: questions.length + 1,
       itemBuilder: (context, index) {
@@ -162,8 +132,7 @@ class QuizResultPage extends StatelessWidget {
                           children: [
                             Text(
                               "Quiz Completed!",
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             Text(
                               "Score: $score / ${questions.length}",
@@ -173,9 +142,7 @@ class QuizResultPage extends StatelessWidget {
                               _getSuccessMessage(),
                               style: TextStyle(
                                 fontSize: 16,
-                                color: rewarded
-                                    ? Colors.green[700]
-                                    : Colors.orange[700],
+                                color: rewarded ? Colors.green[700] : Colors.orange[700],
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -243,19 +210,13 @@ class QuizResultPage extends StatelessWidget {
                         "Your Answer: ${userAnswer ?? 'Not answered'}",
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          color: isCorrect
-                              ? Colors.green[800]
-                              : Colors.red[800],
+                          color: isCorrect ? Colors.green[800] : Colors.red[800],
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         "Correct Answer: $correctAnswer",
-                        style: TextStyle(
-                          color: isCorrect
-                              ? Colors.green[700]
-                              : Colors.red[700],
-                        ),
+                        style: TextStyle(color: isCorrect ? Colors.green[700] : Colors.red[700]),
                       ),
                     ],
                   ),
@@ -303,6 +264,37 @@ class QuizResultPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Quiz Results"),
+        centerTitle: true,
+        backgroundColor: Colors.orange,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            onPressed: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 16),
+            Expanded(child: _buildAnalysis(context)),
+            _buildActionButtons(context),
+          ],
+        ),
+      ),
     );
   }
 }

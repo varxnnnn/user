@@ -89,28 +89,23 @@ class PollsScreen extends StatelessWidget {
                         )
                       : ElevatedButton(
                           onPressed: () {
-                            final questions =
-                                (poll['questions'] as List<dynamic>? ?? [])
-                                    .map((q) => Map<String, dynamic>.from(q))
-                                    .toList();
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PollDetailPage(
-                                  userId: currentUser.uid,
-                                  activityId: activityId,
-                                  title: poll['activityTitle'] ?? '',
-                                  description: poll['rewardDescription'] ?? '',
-                                  sponsorName: poll['sponsorName'] ?? '',
-                                  sponsorLogo: poll['sponsorLogo'] ?? '',
-                                  pointsAwarded: pointsAwarded,
-                                  rewardType: poll['rewardType'] ?? 'Points',
-                                  questions: questions,
-                                ),
-                              ),
-                            );
-                          },
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => PollDetailPage(
+        userId: currentUser.uid,
+        activityId: activityId,
+        title: poll['activityTitle'] ?? '',
+        description: poll['rewardDescription'] ?? '',
+        sponsorName: poll['sponsorName'] ?? '',
+        sponsorLogo: poll['sponsorLogo'] ?? '',
+        pointsAwarded: pointsAwarded,
+        rewardType: poll['rewardType'] ?? 'Points',
+        // ✅ No 'questions' needed — it loads from Firestore now
+      ),
+    ),
+  );
+},
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange,
                             shape: RoundedRectangleBorder(

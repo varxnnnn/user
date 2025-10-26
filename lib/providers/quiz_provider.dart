@@ -28,12 +28,16 @@ class QuizProvider with ChangeNotifier {
     try {
       _quizzes = await _quizService.fetchQuizzes();
 
+      // Build attempt status in parallel for speed
+      final futures = <Future<void>>[];
       _attemptStatus = {};
       for (var quiz in _quizzes) {
         final activityId = quiz['activityId'] as String;
-        final attempted = await _quizService.hasUserAttempted(_userId!, activityId);
-        _attemptStatus[activityId] = attempted;
+        futures.add(_quizService.hasUserAttempted(_userId!, activityId).then((attempted) {
+          _attemptStatus[activityId] = attempted;
+        }));
       }
+      await Future.wait(futures);
 
       _isLoading = false;
     } catch (e) {

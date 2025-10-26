@@ -1,9 +1,12 @@
+// screens/quiz_detail_page.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:giftardo/core/services/reward_allocation_service.dart';
-import 'quiz_result_page.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/quiz_provider.dart';
+import 'quiz_result_page.dart';
+import 'package:giftardo/core/services/reward_allocation_service.dart';
 
 class QuizDetailPage extends StatefulWidget {
   final String activityId;
@@ -35,21 +38,38 @@ class QuizDetailPage extends StatefulWidget {
   State<QuizDetailPage> createState() => _QuizDetailPageState();
 }
 
-class _QuizDetailPageState extends State<QuizDetailPage> {
+class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProviderStateMixin {
   late List<String?> _answers;
   bool _submitted = false;
   List<Map<String, dynamic>> _questions = [];
   bool _loadingQuestions = true;
-  bool _isSubmitting = false; // <-- NEW: track submission state
+  bool _isSubmitting = false;
   int _rewardPoints = 0;
   String? _rewardTitle;
   String? _rewardDescription;
 
+  // Single-question navigation
+  late PageController _pageController;
+  int _currentIndex = 0;
+  bool _autoAdvanceOnSelect = true;
+
+  // Small animation controller for header
+  late AnimationController _animController;
+
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
+    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _loadActivityDetails();
     _loadQuestions();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _animController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadActivityDetails() async {
@@ -88,6 +108,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
 
   Future<void> _loadQuestions() async {
     try {
+      // Prefer nested collection 'questions' if present, else fall back to passed-in questions
       final questionsSnapshot = await FirebaseFirestore.instance
           .collection('sponsor_activities')
           .doc(widget.activityId)
@@ -105,11 +126,26 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
         };
       }).toList();
 
+      // If Firestore has no nested questions, use the provided questions list (backwards compatibility)
+      final finalQuestions = questions.isNotEmpty
+          ? questions
+          : widget.questions.map<Map<String, dynamic>>((q) {
+              return {
+                'id': q['id'] ?? UniqueKey().toString(),
+                'question_text': q['question_text'],
+                'options': q['options'],
+                'correct_answer': q['correct_answer'],
+              };
+            }).toList();
+
       setState(() {
-        _questions = questions;
-        _answers = List<String?>.filled(questions.length, null);
+        _questions = finalQuestions;
+        _answers = List<String?>.filled(finalQuestions.length, null);
         _loadingQuestions = false;
       });
+
+      // kick an intro animation
+      _animController.forward();
     } catch (e) {
       debugPrint("Error loading questions: $e");
       setState(() {
@@ -152,22 +188,22 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
 
   Future<bool> _onWillPop() async {
     final shouldPop = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Exit Quiz?"),
-        content: const Text("Are you sure you want to exit? Your progress will be saved as completed."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("No"),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Exit Quiz?"),
+            content: const Text("Are you sure you want to exit? Your progress will be saved as completed."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text("No"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Yes"),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("Yes"),
-          ),
-        ],
-      ),
-    ) ??
+        ) ??
         false;
 
     if (shouldPop) {
@@ -177,6 +213,25 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     return shouldPop;
   }
 
+  void _onOptionSelected(int questionIndex, String option) {
+    if (_submitted || _isSubmitting) return;
+
+    setState(() {
+      _answers[questionIndex] = option;
+    });
+
+    // small tap feedback: auto-advance after selection, if enabled and not last question
+    if (_autoAdvanceOnSelect) {
+      if (questionIndex < _questions.length - 1) {
+        Future.delayed(const Duration(milliseconds: 250), () {
+          if (mounted) {
+            _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+          }
+        });
+      }
+    }
+  }
+
   Future<void> _submitQuiz() async {
     if (_submitted || _questions.isEmpty || _isSubmitting) return;
 
@@ -184,15 +239,20 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     for (int i = 0; i < _answers.length; i++) {
       if (_answers[i] == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please answer all questions")),
+          const SnackBar(content: Text("Please answer all questions before submitting")),
         );
+        // optionally jump to first unanswered question
+        final idx = _answers.indexOf(null);
+        if (idx != -1 && mounted) {
+          _pageController.animateToPage(idx, duration: const Duration(milliseconds: 350), curve: Curves.ease);
+        }
         return;
       }
     }
 
     setState(() {
       _submitted = true;
-      _isSubmitting = true; // <-- Enable loading
+      _isSubmitting = true;
     });
 
     int score = 0;
@@ -266,6 +326,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
 
       final userDoc = FirebaseFirestore.instance.collection('users').doc(widget.userId);
       await userDoc.collection('quiz_attempts').doc(widget.activityId).set(attemptData);
+
       await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.userId)
@@ -276,6 +337,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
         try {
           Provider.of<QuizProvider>(context, listen: false).markAttempted(widget.activityId);
         } catch (_) {}
+        // Navigate to result page
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => QuizResultPage(
@@ -313,83 +375,381 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       if (mounted) {
         setState(() {
           _isSubmitting = false;
-          // Note: we don't reset _submitted because we navigate away
         });
       }
     }
   }
 
+  Widget _buildHeader() {
+    return SizeTransition(
+      sizeFactor: CurvedAnimation(parent: _animController, curve: Curves.easeOut),
+      axisAlignment: -1,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: Colors.orange.shade700,
+            child: Text(
+              widget.sponsorName.isNotEmpty ? widget.sponsorName[0].toUpperCase() : 'S',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.sponsorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 4),
+                if (_rewardTitle != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_rewardTitle!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                      if (_rewardDescription != null)
+                        Text(_rewardDescription!, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    ],
+                  )
+                else
+                  Text("Reward: ${_rewardPoints > 0 ? '$_rewardPoints points' : 'No reward'}"),
+                const SizedBox(height: 6),
+                Text(widget.title, style: const TextStyle(fontSize: 15)),
+              ],
+            ),
+          ),
+          // compact progress
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('${_currentIndex + 1}/${_questions.isEmpty ? 0 : _questions.length}',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              SizedBox(
+                width: 60,
+                child: LinearProgressIndicator(
+                  value: _questions.isEmpty ? 0 : (_currentIndex + 1) / _questions.length,
+                  backgroundColor: Colors.orange.shade100,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.orange.shade700),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuestionCard(int index) {
+    final q = _questions[index];
+    final options = List<String>.from((q['options'] as List<dynamic>?) ?? []);
+    final userSelection = _answers[index];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      child: Card(
+        elevation: 6,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Question ${index + 1}",
+                style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                q['question_text'] ?? '—',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 12),
+              ...List.generate(options.length, (optIndex) {
+                final option = options[optIndex];
+                final isSelected = userSelection == option;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: InkWell(
+                    onTap: () {
+                      _onOptionSelected(index, option);
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.orange.shade50 : Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: isSelected ? Colors.orange.shade700 : Colors.grey.shade300, width: isSelected ? 1.8 : 1),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: Colors.orange.withOpacity(0.08),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                )
+                              ]
+                            : [],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            height: 26,
+                            width: 26,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: isSelected ? Colors.orange.shade700 : Colors.grey.shade400),
+                              color: isSelected ? Colors.orange.shade700 : Colors.transparent,
+                            ),
+                            child: Center(
+                              child: isSelected
+                                  ? const Icon(Icons.check, size: 16, color: Colors.white)
+                                  : Text(
+                                      String.fromCharCode(65 + optIndex),
+                                      style: TextStyle(
+                                          color: isSelected ? Colors.white : Colors.grey.shade700, fontWeight: FontWeight.bold),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              option,
+                              style: TextStyle(fontSize: 15, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPager() {
+    if (_questions.isEmpty) {
+      return const Center(
+        child: Text("No questions available for this quiz.", style: TextStyle(fontSize: 16, color: Colors.grey)),
+      );
+    }
+
+    return PageView.builder(
+      controller: _pageController,
+      physics: const BouncingScrollPhysics(),
+      itemCount: _questions.length,
+      onPageChanged: (idx) {
+        setState(() {
+          _currentIndex = idx;
+        });
+      },
+      itemBuilder: (context, index) {
+        return _buildQuestionCard(index);
+      },
+    );
+  }
+
+  Widget _buildBottomControls() {
+    final isLast = _currentIndex == _questions.length - 1;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // small progress dots
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: List.generate(_questions.length, (i) {
+              final answered = _answers[i] != null;
+              final active = i == _currentIndex;
+              return GestureDetector(
+                onTap: () {
+                  _pageController.animateToPage(i, duration: const Duration(milliseconds: 300), curve: Curves.ease);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  height: active ? 12 : 8,
+                  width: active ? 32 : 12,
+                  decoration: BoxDecoration(
+                    color: answered ? Colors.orange.shade700 : (active ? Colors.orange.shade300 : Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _currentIndex > 0 && !_isSubmitting ? () => _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut) : null,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text("Back"),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.orange.shade700),
+                  foregroundColor: Colors.orange.shade700,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            if (!isLast)
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: !_isSubmitting
+                      ? () {
+                          _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade700,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text("Next"),
+                ),
+              )
+            else
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitQuiz,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade700,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: _isSubmitting
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Text("Submitting..."),
+                            SizedBox(width: 8),
+                            SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                          ],
+                        )
+                      : const Text("Submit Quiz"),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Nice scaffold with WillPopScope
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
+        backgroundColor: Colors.grey.shade50,
         appBar: AppBar(
-          title: const Text("Quiz Detail"),
+          title: const Text("Quiz"),
           centerTitle: true,
-          backgroundColor: Colors.orange,
+          backgroundColor: Colors.orange.shade700,
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () {
+                // show tiny info sheet
+                showModalBottomSheet(
+                  context: context,
+                  backgroundColor: Colors.white,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                  builder: (_) => Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text("How it works", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 8),
+                      const Text("• Answer questions one-by-one. Tap an option to select and auto-advance."),
+                      const SizedBox(height: 4),
+                      const Text("• Use Back/Next to navigate."),
+                      const SizedBox(height: 4),
+                      const Text("• Submit at the end. The attempt will be recorded immediately."),
+                      const SizedBox(height: 12),
+                      Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it"))),
+                    ]),
+                  ),
+                );
+              },
+            )
+          ],
         ),
         body: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Expanded(
-                    child: _loadingQuestions
-                        ? const Center(child: CircularProgressIndicator())
-                        : _buildQuestions(),
-                  ),
-                  if (!_submitted && !_loadingQuestions && _questions.isNotEmpty)
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : _submitQuiz,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: _isSubmitting
-                            ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Text(
-                              "Submitting",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: _loadingQuestions
+                          ? Center(
+                              key: const ValueKey('loader'),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    height: 90,
+                                    width: 90,
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        CircularProgressIndicator(
+                                          strokeWidth: 8,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.orange.shade200),
+                                        ),
+                                        const Icon(Icons.quiz, size: 40, color: Colors.orange),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text("Preparing questions...", style: TextStyle(color: Colors.grey)),
+                                ],
                               ),
-                            ),
-                            SizedBox(width: 8),
-                            SizedBox(
-                              height: 16,
-                              width: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            ),
-                          ],
-                        )
-                            : const Text("Submit Quiz"),
-                      ),
+                            )
+                          : _buildPager(),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildBottomControls(),
                 ],
               ),
             ),
-            // Full-screen loading overlay
+
+            // submission overlay
             if (_isSubmitting)
               Positioned.fill(
                 child: Container(
                   color: Colors.black.withOpacity(0.4),
                   child: const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    child: Card(
+                      elevation: 10,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 12),
+                            Text("Submitting your answers...", style: TextStyle(fontSize: 16)),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -397,104 +757,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 24,
-          backgroundColor: Colors.orange,
-          child: Text(
-            widget.sponsorName[0].toUpperCase(),
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.sponsorName,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              if (_rewardTitle != null) ...[
-                Text(
-                  _rewardTitle!,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                if (_rewardDescription != null)
-                  Text(
-                    _rewardDescription!,
-                    style: const TextStyle(fontSize: 13, color: Colors.grey),
-                  ),
-              ] else ...[
-                Text(
-                  "Reward: ${_rewardPoints > 0 ? '$_rewardPoints points' : 'No reward'}",
-                ),
-              ],
-              Text(widget.title, style: const TextStyle(fontSize: 16)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuestions() {
-    if (_questions.isEmpty) {
-      return const Center(
-        child: Text(
-          "No questions available for this quiz.",
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: _questions.length,
-      itemBuilder: (context, index) {
-        final q = _questions[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "${index + 1}. ${q['question_text']}",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                ...List<Widget>.generate(
-                  (q['options'] as List<dynamic>).length,
-                      (optIndex) {
-                    final option = q['options'][optIndex];
-                    return RadioListTile<String>(
-                      value: option,
-                      groupValue: _answers[index],
-                      onChanged: (value) {
-                        if (!_submitted && !_isSubmitting) {
-                          setState(() {
-                            _answers[index] = value;
-                          });
-                        }
-                      },
-                      title: Text(option),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

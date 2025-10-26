@@ -22,7 +22,7 @@ class PollService {
         'sponsorLogo': data['sponsor_logo'],
         'rewardedItem': data['reward']?['points'] ?? 0,
         'rewardType': 'Points',
-        'questions': (data['questions'] as List<dynamic>?) ?? [],
+        
       };
     }).toList();
   }

@@ -496,7 +496,7 @@ class _AnimatedQuickEarnCardState extends State<_AnimatedQuickEarnCard>
           sponsorLogo: '',
           pointsAwarded: int.tryParse(item['points'].toString().split(' ')[0]) ?? 0,
           rewardType: 'Points',
-          questions: questions,
+          // questions: questions,
         );
         break;
       case 'quiz':
