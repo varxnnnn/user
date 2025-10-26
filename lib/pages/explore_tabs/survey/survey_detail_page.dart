@@ -12,7 +12,11 @@ class SurveyDetailPage extends StatefulWidget {
   final String title;
   final String description;
   final String sponsorName;
+<<<<<<< HEAD
   final String sponsorLogo;
+=======
+  final String sponsorProfilePic;
+>>>>>>> f9e1824 (newly_updated_4)
   final int pointsAwarded;
   final String rewardType;
 
@@ -23,7 +27,11 @@ class SurveyDetailPage extends StatefulWidget {
     required this.title,
     required this.description,
     required this.sponsorName,
+<<<<<<< HEAD
     required this.sponsorLogo,
+=======
+    required this.sponsorProfilePic,
+>>>>>>> f9e1824 (newly_updated_4)
     required this.pointsAwarded,
     required this.rewardType,
     required dynamic rewardedItem,
@@ -319,11 +327,20 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
           Provider.of<SurveyProvider>(context, listen: false).markAttempted(widget.activityId);
         } catch (_) {}
 
+<<<<<<< HEAD
         await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => SurveyResultPage(
               title: widget.title,
+=======
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => SurveyResultPage(
+              title: widget.title,
+              sponsorName: widget.sponsorName,
+              sponsorProfilePic: widget.sponsorProfilePic,
+>>>>>>> f9e1824 (newly_updated_4)
               questions: _questions,
               answers: _answers,
               rewardedItem: _actualRewardValue > 0 ? _actualRewardValue : widget.pointsAwarded,
@@ -334,8 +351,11 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
             ),
           ),
         );
+<<<<<<< HEAD
 
         if (mounted) Navigator.of(context).pop(true);
+=======
+>>>>>>> f9e1824 (newly_updated_4)
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -418,6 +438,7 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
+<<<<<<< HEAD
         appBar: AppBar(title: Text(widget.title), backgroundColor: Colors.orange),
         body: Stack(
           children: [
@@ -481,6 +502,167 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
                 );
               },
             ),
+=======
+        appBar: AppBar(
+          title: const Text("Survey"),
+          centerTitle: true,
+          backgroundColor: Colors.orange.shade700,
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  backgroundColor: Colors.white,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                  builder: (_) => Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text("How it works", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 8),
+                      const Text("• Answer each question with your feedback"),
+                      const SizedBox(height: 4),
+                      const Text("• Some questions may require text, ratings, or choices"),
+                      const SizedBox(height: 4),
+                      const Text("• Complete all questions to claim your reward"),
+                      const SizedBox(height: 12),
+                      Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it"))),
+                    ]),
+                  ),
+                );
+              },
+            )
+          ],
+        ),
+        body: Stack(
+          children: [
+            _loadingQuestions
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 90,
+                          width: 90,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              CircularProgressIndicator(
+                                strokeWidth: 8,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.orange.shade200),
+                              ),
+                              Icon(Icons.rate_review, size: 40, color: Colors.orange.shade700),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text("Loading survey...", style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  )
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        // Sponsor Header
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 24),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 28,
+                                backgroundColor: Colors.orange.shade700,
+                                backgroundImage: widget.sponsorProfilePic.isNotEmpty ? NetworkImage(widget.sponsorProfilePic) : null,
+                                child: widget.sponsorProfilePic.isEmpty
+                                    ? Text(
+                                        widget.sponsorName.isNotEmpty ? widget.sponsorName[0].toUpperCase() : 'S',
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                                      )
+                                    : null,
+                                onBackgroundImageError: (exception, stackTrace) {
+                                  debugPrint('Failed to load sponsor logo: $exception');
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(widget.sponsorName,
+                                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    if (_rewardTitle != null) ...[
+                                      Text(_rewardTitle!,
+                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                      if (_rewardDescription != null)
+                                        Text(_rewardDescription!,
+                                            style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                                    ] else ...[
+                                      Text(
+                                          "Reward: ${_actualRewardValue > 0 ? '$_actualRewardValue points' : '${widget.pointsAwarded} points'}"),
+                                    ],
+                                    Text(widget.title, style: const TextStyle(fontSize: 16)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Questions
+                        ...List.generate(_questions.length, (index) {
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: Colors.orange.shade100,
+                                width: 1,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange.shade50,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          "Q${index + 1}",
+                                          style: TextStyle(
+                                            color: Colors.orange.shade700,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          _questions[index]['question_text'] as String,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _buildQuestion(index),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+>>>>>>> f9e1824 (newly_updated_4)
             if (_isSubmitting)
               Positioned.fill(
                 child: Container(

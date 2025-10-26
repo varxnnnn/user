@@ -493,9 +493,14 @@ class _AnimatedQuickEarnCardState extends State<_AnimatedQuickEarnCard>
           title: item['title'],
           description: item['desc'],
           sponsorName: item['sponsorName'],
+<<<<<<< HEAD
           sponsorLogo: '',
           pointsAwarded: int.tryParse(item['points'].toString().split(' ')[0]) ?? 0,
           rewardType: 'Points',
+=======
+          pointsAwarded: int.tryParse(item['points'].toString().split(' ')[0]) ?? 0,
+          rewardType: 'Points', sponsorProfilePic: item['sponsorProfilePic'] ?? '',
+>>>>>>> f9e1824 (newly_updated_4)
           // questions: questions,
         );
         break;
@@ -520,7 +525,11 @@ class _AnimatedQuickEarnCardState extends State<_AnimatedQuickEarnCard>
           title: item['title'],
           description: item['desc'],
           sponsorName: item['sponsorName'],
+<<<<<<< HEAD
           sponsorLogo: '',
+=======
+          sponsorProfilePic: item['sponsorProfilePic'] ?? '',
+>>>>>>> f9e1824 (newly_updated_4)
           rewardType: 'Points',
           rewardedItem: item['points'],
           questions: questions,

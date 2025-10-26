@@ -156,6 +156,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+<<<<<<< HEAD
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -202,6 +203,8 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
           ),
         ],
       ),
+=======
+>>>>>>> f9e1824 (newly_updated_4)
       body: _loading
           ? LoadingComponents.leaderboardScreenLoading(
         MediaQuery.of(context).size.width,

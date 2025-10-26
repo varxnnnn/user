@@ -81,10 +81,20 @@ class QuizResultPage extends StatelessWidget {
         CircleAvatar(
           radius: 24,
           backgroundColor: Colors.orange,
+<<<<<<< HEAD
           child: Text(
             sponsorName.isNotEmpty ? sponsorName[0].toUpperCase() : 'S',
             style: const TextStyle(color: Colors.white),
           ),
+=======
+          backgroundImage: sponsorLogo.isNotEmpty ? NetworkImage(sponsorLogo) : null,
+          child: sponsorLogo.isEmpty
+              ? Text(
+                  sponsorName.isNotEmpty ? sponsorName[0].toUpperCase() : 'S',
+                  style: const TextStyle(color: Colors.white),
+                )
+              : null,
+>>>>>>> f9e1824 (newly_updated_4)
         ),
         const SizedBox(width: 12),
         Expanded(
