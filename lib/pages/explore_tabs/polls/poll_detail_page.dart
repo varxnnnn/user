@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/poll_provider.dart';
 import 'poll_result_page.dart';
 import 'package:lottie/lottie.dart';
+import 'package:flutter/gestures.dart';
 
 class PollDetailPage extends StatefulWidget {
   final String userId;
@@ -42,6 +43,7 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
   late AnimationController _confettiController;
   String? _rewardTitle;
   String? _rewardDescription;
+  bool _hasShownInstructions = false; // 👈 New flag
 
   @override
   void initState() {
@@ -99,7 +101,6 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
         final data = doc.data();
         final options = List<String>.from(data['options'] ?? []);
         final rawVotes = List<int>.from(data['votes'] ?? []);
-        // Ensure votes list has same length as options (fill missing with zeros)
         final votes = List<int>.filled(options.length, 0);
         for (var i = 0; i < rawVotes.length && i < votes.length; i++) {
           votes[i] = rawVotes[i];
@@ -184,7 +185,6 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
     setState(() => _isSubmitting = true);
 
     try {
-      // Update votes in Firestore
       for (int i = 0; i < _questions.length; i++) {
         final q = _questions[i];
         final selectedOption = _answers[i];
@@ -202,7 +202,6 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
         }
       }
 
-      // Save attempt
       final userRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
       await userRef.collection('poll_attempts').doc(widget.activityId).set({
         'activityId': widget.activityId,
@@ -224,7 +223,6 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
           .doc(widget.userId)
           .update({'activitiesCompleted': FieldValue.increment(1)});
 
-      // Allocate reward
       final rewardService = RewardAllocationService();
       final activityDoc = await FirebaseFirestore.instance
           .collection('sponsor_activities')
@@ -266,10 +264,8 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
         }
       }
 
-      // Mark as attempted
       Provider.of<PollProvider>(context, listen: false).markAttempted(widget.activityId);
 
-      // Play confetti before navigating
       _confettiController.forward().then((_) {
         if (mounted) {
           Navigator.of(context).pushReplacement(
@@ -290,7 +286,6 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
           );
         }
       });
-
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Submission failed: $e")));
@@ -313,8 +308,152 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
     }
   }
 
+  // 👇 New: Instruction overlay UI
+  Widget _buildInstructionsOverlay() {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.info, color: Colors.orange, size: 32),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Poll Instructions',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade800,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '📋 Please read all questions carefully before submitting your responses.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '• Your answers help sponsors improve your experience.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• Your data is kept strictly confidential and will not be shared with third parties.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• Once started, the poll is marked as "attempted" — even if you exit midway.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• Rewards are granted only after full completion.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• Duplicate submissions are not allowed.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 16),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.black),
+                          children: [
+                            const TextSpan(text: 'By participating, you agree to the app’s '),
+                            TextSpan(
+                              text: 'Terms & Conditions',
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              recognizer: TapGestureRecognizer()..onTap = () {
+                                // TODO: Implement actual navigation if available
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Opening Terms & Conditions...")),
+                                );
+                              },
+                            ),
+                            const TextSpan(text: ' and '),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              recognizer: TapGestureRecognizer()..onTap = () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Opening Privacy Policy...")),
+                                );
+                              },
+                            ),
+                            const TextSpan(text: '.'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _hasShownInstructions = true;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: const Text(
+                    '✅ I Understand – Start Poll',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Show instructions first
+    if (!_hasShownInstructions) {
+      return _buildInstructionsOverlay();
+    }
+
+    // Otherwise, show the actual poll
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
@@ -359,7 +498,6 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       children: [
-                        // Sponsor Header
                         Row(
                           children: [
                             CircleAvatar(
@@ -399,7 +537,6 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
                                 ],
                               ),
                             ),
-                            // Progress indicator
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
@@ -440,7 +577,7 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
                             width: 200,
                             height: 200,
                             child: Lottie.asset(
-                              'assets/animations/confetti.json', // 👈 You can replace with any Lottie JSON
+                              'assets/animations/confetti.json',
                               controller: _confettiController,
                               onLoaded: (composition) {
                                 _confettiController.duration = composition.duration;
@@ -482,7 +619,7 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
     final currentAnswer = _answers[index];
 
     return Card(
-      key: ValueKey('question-$index'), // essential for AnimatedSwitcher
+      key: ValueKey('question-$index'),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 2,
       child: Padding(
@@ -506,7 +643,6 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
                   setState(() {
                     _answers[index] = option;
                   });
-                  // Auto-advance after a short delay for fluidity
                   Future.delayed(const Duration(milliseconds: 300), () {
                     if (mounted && _currentIndex == index) _goToNext();
                   });
@@ -576,7 +712,6 @@ class _PollDetailPageState extends State<PollDetailPage> with TickerProviderStat
   }
 }
 
-// Custom transition for smooth question swaps
 class FadeScaleTransition extends StatelessWidget {
   final Animation<double> animation;
   final Widget child;

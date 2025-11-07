@@ -1,3 +1,4 @@
+// screens/survey_detail_page.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,6 +6,7 @@ import 'package:giftardo/core/services/reward_allocation_service.dart';
 import 'survey_result_page.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/survey_provider.dart';
+import 'package:flutter/gestures.dart';
 
 class SurveyDetailPage extends StatefulWidget {
   final String userId;
@@ -45,6 +47,9 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
   String? _rewardTitle;
   String? _rewardDescription;
 
+  // 👇 New: Instruction state
+  bool _hasShownInstructions = false;
+
   Timer? _refreshTimer;
 
   @override
@@ -60,10 +65,6 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
     super.dispose();
   }
 
-  
-
-  // _refreshData was removed: not referenced anywhere.
-
   Future<void> _loadRewardMeta({bool silent = false}) async {
     try {
       final activityDoc = await FirebaseFirestore.instance
@@ -73,7 +74,8 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
 
       if (activityDoc.exists) {
         final data = activityDoc.data()!;
-        final rewardAllocation = data['reward_allocation'] as Map<String, dynamic>?;
+        final rewardAllocation =
+            data['reward_allocation'] as Map<String, dynamic>?;
         final rewardId = rewardAllocation?['reward_id'] as String?;
         if (rewardId != null) {
           final rdoc = await FirebaseFirestore.instance
@@ -85,7 +87,6 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
             final newTitle = rdata['title'] as String?;
             final newDesc = rdata['description'] as String?;
 
-            // Only update if changed
             if (newTitle != _rewardTitle || newDesc != _rewardDescription) {
               if (!silent || mounted) {
                 setState(() {
@@ -120,16 +121,20 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
         };
       }).toList();
 
-      // Check if questions actually changed (by comparing IDs and text)
       bool hasChanged = false;
       if (_questions.length != newQuestions.length) {
         hasChanged = true;
       } else {
         for (int i = 0; i < _questions.length; i++) {
           if (_questions[i]['id'] != newQuestions[i]['id'] ||
-              _questions[i]['question_text'] != newQuestions[i]['question_text'] ||
-              _questions[i]['question_type'] != newQuestions[i]['question_type'] ||
-              !listEquals(_questions[i]['options'], newQuestions[i]['options'])) {
+              _questions[i]['question_text'] !=
+                  newQuestions[i]['question_text'] ||
+              _questions[i]['question_type'] !=
+                  newQuestions[i]['question_type'] ||
+              !listEquals(
+                _questions[i]['options'],
+                newQuestions[i]['options'],
+              )) {
             hasChanged = true;
             break;
           }
@@ -137,11 +142,9 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
       }
 
       if (hasChanged) {
-        // Preserve answers for questions that still exist
         final Map<int, dynamic> preservedAnswers = {};
         for (int i = 0; i < newQuestions.length; i++) {
           final newQ = newQuestions[i];
-          // Find matching old question by ID
           for (int j = 0; j < _questions.length; j++) {
             if (_questions[j]['id'] == newQ['id']) {
               if (_answers.containsKey(j)) {
@@ -177,7 +180,6 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
     }
   }
 
-  // Helper to compare two lists
   bool listEquals(List<dynamic> a, List<dynamic> b) {
     if (a.length != b.length) return false;
     for (int i = 0; i < a.length; i++) {
@@ -188,7 +190,9 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
 
   Future<void> _saveAbandonedAttempt() async {
     try {
-      final userRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
+      final userRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId);
       await userRef.collection('survey_attempts').doc(widget.activityId).set({
         'activityId': widget.activityId,
         'activityTitle': widget.title,
@@ -215,23 +219,26 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
   }
 
   Future<bool> _onWillPop() async {
-    final shouldPop = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Exit Survey?"),
-        content: const Text("Are you sure you want to exit? Your progress will be saved as completed."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("No"),
+    final shouldPop =
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Exit Survey?"),
+            content: const Text(
+              "Are you sure you want to exit? Your progress will be saved as completed.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text("No"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Yes"),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("Yes"),
-          ),
-        ],
-      ),
-    ) ??
+        ) ??
         false;
 
     if (shouldPop) {
@@ -254,7 +261,9 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      final userRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
+      final userRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId);
       await userRef.collection('survey_attempts').doc(widget.activityId).set({
         'activityId': widget.activityId,
         'activityTitle': widget.title,
@@ -284,7 +293,8 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
       if (activityDoc.exists) {
         final data = activityDoc.data()!;
         final sponsorId = data['sponsor_id'] as String?;
-        final rewardAllocation = data['reward_allocation'] as Map<String, dynamic>?;
+        final rewardAllocation =
+            data['reward_allocation'] as Map<String, dynamic>?;
         final rewardId = rewardAllocation?['reward_id'] as String?;
 
         if (sponsorId != null && rewardId != null) {
@@ -298,25 +308,31 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
           if (rewardResult != null) {
             _actualRewardValue = rewardResult['reward_value'] as int? ?? 0;
             _rewardCode = rewardResult['reward_code'] as String?;
-            _actualRewardType = rewardResult['reward_type'] as String? ?? widget.rewardType;
+            _actualRewardType =
+                rewardResult['reward_type'] as String? ?? widget.rewardType;
             _rewardTitle = rewardResult['reward_title'] as String?;
             _rewardDescription = rewardResult['reward_description'] as String?;
 
-            await userRef.collection('survey_attempts').doc(widget.activityId).update({
-              'rewardedItem': _actualRewardValue,
-              'rewardCode': _rewardCode,
-              'rewardTitle': _rewardTitle,
-              'rewardDescription': _rewardDescription,
-              'rewardType': _actualRewardType,
-            });
+            await userRef
+                .collection('survey_attempts')
+                .doc(widget.activityId)
+                .update({
+                  'rewardedItem': _actualRewardValue,
+                  'rewardCode': _rewardCode,
+                  'rewardTitle': _rewardTitle,
+                  'rewardDescription': _rewardDescription,
+                  'rewardType': _actualRewardType,
+                });
           }
         }
       }
 
       if (mounted) {
-        // mark as completed in provider so lists update immediately
         try {
-          Provider.of<SurveyProvider>(context, listen: false).markAttempted(widget.activityId);
+          Provider.of<SurveyProvider>(
+            context,
+            listen: false,
+          ).markAttempted(widget.activityId);
         } catch (_) {}
 
         Navigator.of(context).pushReplacement(
@@ -327,7 +343,9 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
               sponsorProfilePic: widget.sponsorProfilePic,
               questions: _questions,
               answers: _answers,
-              rewardedItem: _actualRewardValue > 0 ? _actualRewardValue : widget.pointsAwarded,
+              rewardedItem: _actualRewardValue > 0
+                  ? _actualRewardValue
+                  : widget.pointsAwarded,
               rewardType: _actualRewardType ?? widget.rewardType,
               rewardCode: _rewardCode,
               rewardTitle: _rewardTitle,
@@ -337,9 +355,9 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error submitting survey: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error submitting survey: $e")));
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -412,8 +430,170 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
     }
   }
 
+  // 👇 New: Instruction Overlay UI
+  Widget _buildInstructionsOverlay() {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.rate_review,
+                      color: Colors.orange,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Survey Instructions',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade800,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Please read all questions carefully and answer honestly based on your experience.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '• Your responses will help the app and its sponsors improve products and services.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• All information you provide will remain confidential and will not be shared with any third party.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• Once you start the survey, it will be considered completed even if you exit before finishing.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• Rewards or benefits (if applicable) will be provided after successful completion.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• Each user can participate only once per survey unless otherwise stated.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 16),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontSize: 16,
+                            height: 1.6,
+                            color: Colors.black,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'By participating, you agree to the app’s ',
+                            ),
+                            TextSpan(
+                              text: 'Terms & Conditions',
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Opening Terms & Conditions...",
+                                      ),
+                                    ),
+                                  );
+                                },
+                            ),
+                            const TextSpan(text: ' and '),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Opening Privacy Policy...",
+                                      ),
+                                    ),
+                                  );
+                                },
+                            ),
+                            const TextSpan(text: '.'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _hasShownInstructions = true;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: const Text(
+                    '✅ I Understand – Start Survey',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // 👇 Show instructions first
+    if (!_hasShownInstructions) {
+      return _buildInstructionsOverlay();
+    }
+
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
@@ -429,24 +609,48 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
                 showModalBottomSheet(
                   context: context,
                   backgroundColor: Colors.white,
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                  ),
                   builder: (_) => Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text("How it works", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 8),
-                      const Text("• Answer each question with your feedback"),
-                      const SizedBox(height: 4),
-                      const Text("• Some questions may require text, ratings, or choices"),
-                      const SizedBox(height: 4),
-                      const Text("• Complete all questions to claim your reward"),
-                      const SizedBox(height: 12),
-                      Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it"))),
-                    ]),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "How it works",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text("• Answer each question with your feedback"),
+                        const SizedBox(height: 4),
+                        const Text(
+                          "• Some questions may require text, ratings, or choices",
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          "• Complete all questions to claim your reward",
+                        ),
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text("Got it"),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
-            )
+            ),
           ],
         ),
         body: Stack(
@@ -464,14 +668,23 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
                             children: [
                               CircularProgressIndicator(
                                 strokeWidth: 8,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.orange.shade200),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.orange.shade200,
+                                ),
                               ),
-                              Icon(Icons.rate_review, size: 40, color: Colors.orange.shade700),
+                              Icon(
+                                Icons.rate_review,
+                                size: 40,
+                                color: Colors.orange.shade700,
+                              ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 12),
-                        const Text("Loading survey...", style: TextStyle(color: Colors.grey)),
+                        const Text(
+                          "Loading survey...",
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ],
                     ),
                   )
@@ -479,7 +692,6 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        // Sponsor Header
                         Container(
                           margin: const EdgeInsets.only(bottom: 24),
                           child: Row(
@@ -487,15 +699,27 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
                               CircleAvatar(
                                 radius: 28,
                                 backgroundColor: Colors.orange.shade700,
-                                backgroundImage: widget.sponsorProfilePic.isNotEmpty ? NetworkImage(widget.sponsorProfilePic) : null,
+                                backgroundImage:
+                                    widget.sponsorProfilePic.isNotEmpty
+                                    ? NetworkImage(widget.sponsorProfilePic)
+                                    : null,
                                 child: widget.sponsorProfilePic.isEmpty
                                     ? Text(
-                                        widget.sponsorName.isNotEmpty ? widget.sponsorName[0].toUpperCase() : 'S',
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                                        widget.sponsorName.isNotEmpty
+                                            ? widget.sponsorName[0]
+                                                  .toUpperCase()
+                                            : 'S',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20,
+                                        ),
                                       )
                                     : null,
                                 onBackgroundImageError: (exception, stackTrace) {
-                                  debugPrint('Failed to load sponsor logo: $exception');
+                                  debugPrint(
+                                    'Failed to load sponsor logo: $exception',
+                                  );
                                 },
                               ),
                               const SizedBox(width: 12),
@@ -503,26 +727,43 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(widget.sponsorName,
-                                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    Text(
+                                      widget.sponsorName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                     if (_rewardTitle != null) ...[
-                                      Text(_rewardTitle!,
-                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                      Text(
+                                        _rewardTitle!,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                       if (_rewardDescription != null)
-                                        Text(_rewardDescription!,
-                                            style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                                        Text(
+                                          _rewardDescription!,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                     ] else ...[
                                       Text(
-                                          "Reward: ${_actualRewardValue > 0 ? '$_actualRewardValue points' : '${widget.pointsAwarded} points'}"),
+                                        "Reward: ${_actualRewardValue > 0 ? '$_actualRewardValue points' : '${widget.pointsAwarded} points'}",
+                                      ),
                                     ],
-                                    Text(widget.title, style: const TextStyle(fontSize: 16)),
+                                    Text(
+                                      widget.title,
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        // Questions
                         ...List.generate(_questions.length, (index) {
                           return Card(
                             margin: const EdgeInsets.only(bottom: 16),
@@ -544,7 +785,9 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           color: Colors.orange.shade50,
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: Text(
                                           "Q${index + 1}",
@@ -557,7 +800,8 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Text(
-                                          _questions[index]['question_text'] as String,
+                                          _questions[index]['question_text']
+                                              as String,
                                           style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -594,31 +838,39 @@ class _SurveyDetailPageState extends State<SurveyDetailPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: _isSubmitting
                 ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text(
-                  "Submitting",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-                SizedBox(width: 8),
-                SizedBox(
-                  height: 16,
-                  width: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
-              ],
-            )
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Text(
+                        "Submitting",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
                 : const Text(
-              "Submit Survey",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+                    "Submit Survey",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
           ),
         ),
       ),

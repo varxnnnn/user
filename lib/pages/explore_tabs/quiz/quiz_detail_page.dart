@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/quiz_provider.dart';
 import 'quiz_result_page.dart';
 import 'package:giftardo/core/services/reward_allocation_service.dart';
+import 'package:flutter/gestures.dart';
 
 class QuizDetailPage extends StatefulWidget {
   final String activityId;
@@ -48,13 +49,14 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
   String? _rewardTitle;
   String? _rewardDescription;
 
-  // Single-question navigation
   late PageController _pageController;
   int _currentIndex = 0;
   bool _autoAdvanceOnSelect = true;
 
-  // Small animation controller for header
   late AnimationController _animController;
+
+  // 👇 New: Instruction state
+  bool _hasShownInstructions = false;
 
   @override
   void initState() {
@@ -108,7 +110,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
 
   Future<void> _loadQuestions() async {
     try {
-      // Prefer nested collection 'questions' if present, else fall back to passed-in questions
       final questionsSnapshot = await FirebaseFirestore.instance
           .collection('sponsor_activities')
           .doc(widget.activityId)
@@ -126,7 +127,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
         };
       }).toList();
 
-      // If Firestore has no nested questions, use the provided questions list (backwards compatibility)
       final finalQuestions = questions.isNotEmpty
           ? questions
           : widget.questions.map<Map<String, dynamic>>((q) {
@@ -144,7 +144,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
         _loadingQuestions = false;
       });
 
-      // kick an intro animation
       _animController.forward();
     } catch (e) {
       debugPrint("Error loading questions: $e");
@@ -220,7 +219,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
       _answers[questionIndex] = option;
     });
 
-    // small tap feedback: auto-advance after selection, if enabled and not last question
     if (_autoAdvanceOnSelect) {
       if (questionIndex < _questions.length - 1) {
         Future.delayed(const Duration(milliseconds: 250), () {
@@ -235,13 +233,11 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
   Future<void> _submitQuiz() async {
     if (_submitted || _questions.isEmpty || _isSubmitting) return;
 
-    // Validate all answered
     for (int i = 0; i < _answers.length; i++) {
       if (_answers[i] == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Please answer all questions before submitting")),
         );
-        // optionally jump to first unanswered question
         final idx = _answers.indexOf(null);
         if (idx != -1 && mounted) {
           _pageController.animateToPage(idx, duration: const Duration(milliseconds: 350), curve: Curves.ease);
@@ -333,11 +329,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
           .update({'activitiesCompleted': FieldValue.increment(1)});
 
       if (mounted) {
-        // mark in provider so the quizzes list updates immediately
         try {
           Provider.of<QuizProvider>(context, listen: false).markAttempted(widget.activityId);
         } catch (_) {}
-        // Navigate to result page
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => QuizResultPage(
@@ -380,6 +374,143 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
     }
   }
 
+  // 👇 New: Instruction Overlay UI
+  Widget _buildInstructionsOverlay() {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.quiz, color: Colors.orange, size: 32),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Quiz Instructions',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade800,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Please read each question carefully before selecting your answer.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '• Once the quiz begins, you cannot pause or exit midway — doing so will still mark it as completed.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• Your responses will be used by the app to improve content quality and user experience.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• Your data will remain private and secure — it will not be shared with any third party.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• Rewards or points will be awarded after successful completion of the quiz.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '• Multiple attempts for the same quiz are not allowed unless specified.',
+                        style: TextStyle(fontSize: 16, height: 1.6),
+                      ),
+                      const SizedBox(height: 16),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.black),
+                          children: [
+                            const TextSpan(text: 'By participating, you agree to the app’s '),
+                            TextSpan(
+                              text: 'Terms & Conditions',
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              recognizer: TapGestureRecognizer()..onTap = () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Opening Terms & Conditions...")),
+                                );
+                              },
+                            ),
+                            const TextSpan(text: ' and '),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              recognizer: TapGestureRecognizer()..onTap = () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Opening Privacy Policy...")),
+                                );
+                              },
+                            ),
+                            const TextSpan(text: '.'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _hasShownInstructions = true;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: const Text(
+                    '✅ I Understand – Start Quiz',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeader() {
     return SizeTransition(
       sizeFactor: CurvedAnimation(parent: _animController, curve: Curves.easeOut),
@@ -420,7 +551,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
               ],
             ),
           ),
-          // compact progress
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -563,7 +693,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // small progress dots
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Wrap(
@@ -649,7 +778,11 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    // Nice scaffold with WillPopScope
+    // 👇 Show instructions first
+    if (!_hasShownInstructions) {
+      return _buildInstructionsOverlay();
+    }
+
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
@@ -663,7 +796,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
             IconButton(
               icon: const Icon(Icons.info_outline),
               onPressed: () {
-                // show tiny info sheet
                 showModalBottomSheet(
                   context: context,
                   backgroundColor: Colors.white,
@@ -732,8 +864,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with SingleTickerProvid
                 ],
               ),
             ),
-
-            // submission overlay
             if (_isSubmitting)
               Positioned.fill(
                 child: Container(
