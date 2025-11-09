@@ -1,0 +1,27 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "giftardo-43381",
+          "appId": "1:1058031343797:android:c3165d560c6287730706fc",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "giftardo-43381",
+          "configurations": {
+            "android": "1:1058031343797:android:c3165d560c6287730706fc",
+            "ios": "1:1058031343797:ios:4d22645c4a9fd13d0706fc",
+            "web": "1:1058031343797:web:275703980741aaea0706fc"
+          }
+        }
+      }
+    }
+  }
+}}

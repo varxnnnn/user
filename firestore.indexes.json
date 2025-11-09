@@ -1,0 +1,17 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "activity_participants",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "activityId",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
+
+
