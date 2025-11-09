@@ -1,0 +1,407 @@
+// lib/ui/screens/signup_screen.dart
+
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:giftardo/providers/auth_provider.dart';
+import 'otp_linking_screen.dart';
+import 'package:giftardo/main_screen.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:image_picker/image_picker.dart'; // 👈 NEW
+
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
+
+  @override
+  State<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
+  bool _isGettingLocation = false;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  String _countryCode = '+91';
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _referralCodeController = TextEditingController();
+  String _gender = "Male";
+  File? _profileImage; // 👈 NEW
+
+  Future<void> _getLocationFromGPS() async {
+    setState(() => _isGettingLocation = true);
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location services are disabled. Please enable GPS.'),
+          ),
+        );
+        setState(() => _isGettingLocation = false);
+        return;
+      }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permission denied.')),
+          );
+          setState(() => _isGettingLocation = false);
+          return;
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Location permission permanently denied. Please enable in settings.',
+            ),
+          ),
+        );
+        setState(() => _isGettingLocation = false);
+        return;
+      }
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      if (!mounted) return;
+      _locationController.text = '${position.latitude}, ${position.longitude}';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Location fetched: ${position.latitude}, ${position.longitude}',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching location: $e')),
+      );
+    }
+    if (mounted) setState(() => _isGettingLocation = false);
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _profileImage = File(picked.path);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 40),
+                const Text(
+                  "Giftardo",
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  "Create your account",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  "Join and start winning!",
+                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                ),
+                const SizedBox(height: 30),
+
+                // 👇 Profile Image Picker
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey, width: 2),
+                    ),
+                    child: _profileImage != null
+                        ? ClipOval(
+                      child: Image.file(
+                        _profileImage!,
+                        fit: BoxFit.cover,
+                        width: 100,
+                        height: 100,
+                      ),
+                    )
+                        : const Icon(
+                      Icons.person,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                TextField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: "Name",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    hintText: "hello@example.com",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                IntlPhoneField(
+                  controller: _phoneController,
+                  initialCountryCode: 'IN',
+                  decoration: InputDecoration(
+                    labelText: "Phone",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onChanged: (phone) {
+                    _countryCode = phone.countryCode;
+                  },
+                  onCountryChanged: (country) {
+                    _countryCode = '+${country.dialCode}';
+                  },
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    suffixIcon: const Icon(Icons.lock),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: _ageController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: "Age",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                DropdownButtonFormField<String>(
+                  value: _gender,
+                  items: ['Male', 'Female', 'Other']
+                      .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                      .toList(),
+                  onChanged: (value) => setState(() => _gender = value!),
+                  decoration: InputDecoration(
+                    labelText: "Gender",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _locationController,
+                        decoration: InputDecoration(
+                          labelText: "Location (GPS)",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        readOnly: true,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: _isGettingLocation
+                          ? null
+                          : _getLocationFromGPS,
+                      icon: const Icon(Icons.gps_fixed),
+                      label: _isGettingLocation
+                          ? const Text('Getting...')
+                          : const Text('Get Location'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        minimumSize: const Size(40, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                TextField(
+                  controller: _referralCodeController,
+                  decoration: InputDecoration(
+                    labelText: "Referral Code (Optional)",
+                    hintText: "Enter friend's code",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 25),
+
+                authProvider.isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                  onPressed: () async {
+                    final email = _emailController.text.trim();
+                    final password = _passwordController.text.trim();
+                    final phone =
+                        '$_countryCode${_phoneController.text.trim()}';
+
+                    if (email.isEmpty ||
+                        password.isEmpty ||
+                        phone.isEmpty) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill all required fields'),
+                          ),
+                        );
+                      }
+                      return;
+                    }
+                    if (_locationController.text.trim().isEmpty) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fetch your location using GPS.'),
+                          ),
+                        );
+                      }
+                      return;
+                    }
+
+                    final success = await authProvider
+                        .requestOtpAndPrepareSignup(
+                      email: email,
+                      password: password,
+                      name: _nameController.text.trim(),
+                      phone: phone,
+                      age: _ageController.text.trim().isEmpty
+                          ? null
+                          : int.tryParse(_ageController.text.trim()),
+                      gender: _gender,
+                      location: _locationController.text.trim(),
+                      referralCode: _referralCodeController.text.trim().isNotEmpty
+                          ? _referralCodeController.text.trim()
+                          : null,
+                      profileImage: _profileImage, // 👈 PASS IMAGE
+                    );
+
+                    if (!mounted) return;
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Signup successful! Welcome to Giftardo.'),
+                        ),
+                      );
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MainScreen(),
+                        ),
+                      );
+                    } else if (authProvider.pendingVerificationId != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('OTP sent! Please verify your phone number.'),
+                        ),
+                      );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OtpLinkingScreen(
+                            verificationId: authProvider.pendingVerificationId!,
+                            phoneNumber: phone,
+                          ),
+                        ),
+                      );
+                    } else if (authProvider.error != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(authProvider.error!)),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text("Sign Up"),
+                ),
+                const SizedBox(height: 20),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Already have an account?"),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        "Login",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                if (authProvider.error != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    authProvider.error!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
